@@ -1,88 +1,161 @@
-/* Global Styles */
+/* ============================================
+   NEON BLUE THEME - DUBSync Video Player
+   Design: Dark background with cyan neon glow
+   ============================================ */
+
+/* Global Styles - Deep Dark Background */
 QWidget {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background-color: white;
-    color: #333;
+    background-color: #121212;
+    color: #e0e0e0;
 }
 
-/* Main Window */
 QMainWindow {
-    background-color: white;
+    background-color: #121212;
 }
 
-/* Open Button - Modern Blue Gradient */
+/* ============================================
+   OPEN BUTTON - Neon Pill Shape with Glow
+   ============================================ */
 QPushButton#openButton {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #4A90E2, stop:1 #357ABD);
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                stop:0 #0072ff, stop:1 #00c6ff);
     color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 6px;
+    border: 2px solid #00a8ff;
+    padding: 12px 32px;
+    border-radius: 25px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 15px;
+    min-height: 50px;
 }
 
 QPushButton#openButton:hover {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #5DA1F1, stop:1 #4A90E2);
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                stop:0 #0088ff, stop:1 #00d9ff);
+    border: 3px solid #00d9ff;
 }
 
 QPushButton#openButton:pressed {
-    background: #2D639B;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                stop:0 #0055cc, stop:1 #0099cc);
+    border: 2px solid #0088ff;
 }
 
-/* Control Buttons (Play, Pause, Stop, Volume) */
+/* ============================================
+   VIDEO WIDGET - Rounded Container with Neon Border
+   Note: VideoWidget itself is styled here, but if
+   it has a QFrame parent, style that instead
+   ============================================ */
+VideoWidget {
+    background-color: #1a1a1a;
+    border: 3px solid #00a8ff;
+    border-radius: 24px;
+}
+
+QFrame#videoContainer {
+    background-color: #1a1a1a;
+    border: 3px solid #00a8ff;
+    border-radius: 24px;
+}
+
+/* ============================================
+   CONTROL BUTTONS - Neon Blue Icons
+   ============================================ */
 QPushButton.controlButton {
-    background-color: #333333; /* Dark background for visibility */
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 8px;
-    min-width: 40px;
-    min-height: 40px;
+    background-color: transparent;
+    border: 2px solid #00a8ff;
+    border-radius: 8px;
+    padding: 10px;
+    min-width: 45px;
+    min-height: 45px;
+    color: #00d9ff;
 }
 
 QPushButton.controlButton:hover {
-    background-color: #444444;
-    border-color: #666;
+    background-color: rgba(0, 168, 255, 0.15);
+    border: 2px solid #00d9ff;
 }
 
 QPushButton.controlButton:pressed {
-    background-color: #222222;
-    border-color: #888;
+    background-color: rgba(0, 168, 255, 0.3);
+    border: 2px solid #0088ff;
 }
 
-/* Slider Custom Styling */
+/* Control button icons - make them bright */
+QPushButton.controlButton::icon {
+    color: #00d9ff;
+}
+
+/* ============================================
+   POSITION SLIDER - Sleek Neon Progress Bar
+   ============================================ */
 QSlider::groove:horizontal {
-    border: 1px solid #bbb;
-    height: 6px;
-    background: #e5e5e5;
-    margin: 2px 0;
-    border-radius: 3px;
+    border: none;
+    height: 4px;
+    background: #2a4a6a;
+    margin: 0px;
+    border-radius: 2px;
+}
+
+QSlider::sub-page:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #00a8ff, stop:1 #00d9ff);
+    border-radius: 2px;
 }
 
 QSlider::handle:horizontal {
-    background: #357ABD;
-    border: 1px solid #2D639B;
+    background: qradial-gradient(cx:0.5, cy:0.5, radius:0.5,
+                fx:0.5, fy:0.5,
+                stop:0 #ffffff, stop:0.5 #00d9ff, stop:1 #0088ff);
+    border: 2px solid #00ffff;
+    width: 18px;
+    height: 18px;
+    margin: -8px 0;
+    border-radius: 10px;
+}
+
+QSlider::handle:horizontal:hover {
+    background: qradial-gradient(cx:0.5, cy:0.5, radius:0.5,
+                fx:0.5, fy:0.5,
+                stop:0 #ffffff, stop:0.4 #00ffff, stop:1 #00a8ff);
+    border: 3px solid #00ffff;
+    width: 20px;
+    height: 20px;
+    margin: -9px 0;
+}
+
+/* ============================================
+   VOLUME SLIDER - Compact Neon Style
+   ============================================ */
+QSlider#volumeSlider::groove:horizontal {
+    border: none;
+    height: 3px;
+    background: #2a4a6a;
+    border-radius: 2px;
+}
+
+QSlider#volumeSlider::sub-page:horizontal {
+    background: #00a8ff;
+    border-radius: 2px;
+}
+
+QSlider#volumeSlider::handle:horizontal {
+    background: qradial-gradient(cx:0.5, cy:0.5, radius:0.5,
+                fx:0.5, fy:0.5,
+                stop:0 #ffffff, stop:0.5 #00d9ff, stop:1 #0088ff);
+    border: 2px solid #00d9ff;
     width: 14px;
     height: 14px;
-    margin: -5px 0;
-    border-radius: 7px;
+    margin: -6px 0;
+    border-radius: 8px;
 }
 
-/* Specific Style for Volume Slider handled via object name potentially or generic */
-QSlider#volumeSlider::handle:horizontal {
-    background: #666;
-    border: 1px solid #444;
-}
-
-/* Video Container Border */
-QFrame#videoContainer {
-    border: 1px solid #ddd;
-    background-color: #000;
-    border-radius: 4px;
-}
-
-/* Time Label */
+/* ============================================
+   TIME LABEL - Neon Cyan Text
+   ============================================ */
 QLabel#timeLabel {
-    font-size: 12px;
-    font-weight: 500;
-    color: #666;
+    font-size: 13px;
+    font-weight: 600;
+    color: #00d9ff;
+    background-color: transparent;
 }
