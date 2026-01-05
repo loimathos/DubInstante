@@ -25,6 +25,7 @@ public:
   qint64 position() const;
   QMediaPlayer::PlaybackState playbackState() const;
   float volume() const;
+  qreal videoFrameRate() const;
 
 public slots:
   void play();
@@ -38,6 +39,7 @@ signals:
   void durationChanged(qint64 duration);
   void playbackStateChanged(QMediaPlayer::PlaybackState state);
   void mediaStatusChanged(QMediaPlayer::MediaStatus status);
+  void metaDataChanged();
   void volumeChanged(float volume);
   void errorOccurred(const QString &error);
 

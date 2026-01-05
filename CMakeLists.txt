@@ -14,10 +14,16 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia OpenGLWidgets OpenGL)
 add_executable(DUBSync
     main.cpp
     src/MainWindow.cpp
-    src/VideoWidget.cpp
+    src/Exporter.cpp
+    src/AudioRecorderManager.cpp
+    src/RythmoWidget.cpp
+     src/VideoWidget.cpp
     src/PlayerController.cpp
     include/MainWindow.h
-    include/VideoWidget.h
+    include/Exporter.h
+    include/AudioRecorderManager.h
+    include/RythmoWidget.h
+     include/VideoWidget.h
     include/PlayerController.h
     resources.qrc
 )

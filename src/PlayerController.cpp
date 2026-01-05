@@ -1,4 +1,5 @@
 #include "PlayerController.h"
+#include <QMediaMetaData>
 #include <QVideoSink>
 
 PlayerController::PlayerController(QObject *parent)
@@ -16,6 +17,8 @@ PlayerController::PlayerController(QObject *parent)
           &PlayerController::playbackStateChanged);
   connect(m_mediaPlayer, &QMediaPlayer::mediaStatusChanged, this,
           &PlayerController::mediaStatusChanged);
+  connect(m_mediaPlayer, &QMediaPlayer::metaDataChanged, this,
+          &PlayerController::metaDataChanged);
 
   // Volume signal from audio output
   connect(m_audioOutput, &QAudioOutput::volumeChanged, this,
@@ -52,3 +55,12 @@ QMediaPlayer::PlaybackState PlayerController::playbackState() const {
   return m_mediaPlayer->playbackState();
 }
 float PlayerController::volume() const { return m_audioOutput->volume(); }
+
+qreal PlayerController::videoFrameRate() const {
+  QVariant rate =
+      m_mediaPlayer->metaData().value(QMediaMetaData::VideoFrameRate);
+  if (rate.isValid() && rate.toReal() > 0) {
+    return rate.toReal();
+  }
+  return 25.0; // Default to 25 FPS if unknown
+}
