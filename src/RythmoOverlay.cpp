@@ -70,6 +70,11 @@ void RythmoOverlay::setSpeed(int speed) {
   m_rythmo2->setSpeed(speed);
 }
 
+void RythmoOverlay::setTextColor(const QColor &color) {
+  m_rythmo1->setTextColor(color);
+  m_rythmo2->setTextColor(color);
+}
+
 void RythmoOverlay::paintEvent(QPaintEvent *event) {
   // We don't paint anything ourselves, just the transparent background
   QWidget::paintEvent(event);

@@ -1,6 +1,6 @@
-# DUBSync - Professional Video Dubbing Studio
+# DubInstante - Professional Video Dubbing Studio
 
-DUBSync is a professional video dubbing software designed to be powerful, intuitive, and visually refined. It allows you to play videos, write dubbing text on a rythmo band, record synchronized voice tracks, and export the final result.
+DubInstante is a professional video dubbing software designed to be powerful, intuitive, and visually refined. It allows you to play videos, write dubbing text on a rythmo band, record synchronized voice tracks, and export the final result.
 
 ## ✨ Key Features
 
@@ -61,7 +61,7 @@ DUBSync is a professional video dubbing software designed to be powerful, intuit
 ### Windows
 The project is automatically compiled for Windows via GitHub Actions.
 1. Go to the **Actions** tab of this repository
-2. Download the latest **DUBSync-Windows** artifact
+2. Download the latest **DubInstante-Windows** artifact
 
 ### Linux (Manual Build)
 1. Install dependencies:
@@ -73,7 +73,7 @@ The project is automatically compiled for Windows via GitHub Actions.
    mkdir build && cd build
    cmake ..
    make -j$(nproc)
-   ./DUBSync
+   ./DubInstante
    ```
 
 ## 🎹 Keyboard Shortcuts & Usage
@@ -117,7 +117,7 @@ Edit `RythmoWidget.cpp` to customize the rythmo appearance:
 
 ## 🎨 UI Design Philosophy
 
-DUBSync features a carefully crafted user interface with:
+DubInstante features a carefully crafted user interface with:
 - **Clean Professional Theme**: Light color scheme with subtle depth
 - **Refined Controls**: Polished spinboxes, sliders, and buttons
 - **Visual Hierarchy**: Clear organization of controls by function
@@ -141,4 +141,4 @@ Please open an issue or submit a pull request.
 
 ---
 
-**DUBSync** - Making professional video dubbing accessible to everyone.
+**DubInstante** - Making professional video dubbing accessible to everyone.

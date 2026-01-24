@@ -1,4 +1,5 @@
 #include "RythmoWidget.h"
+#include <QTimer>
 #include <QFontDatabase>
 #include <QFontMetrics>
 #include <QKeyEvent>
@@ -10,7 +11,9 @@ RythmoWidget::RythmoWidget(QWidget *parent)
     : QWidget(parent), m_speed(100), m_currentPosition(0), m_text(""),
       m_fontSize(16), m_verticalPadding(4), m_textColor(QColor(34, 34, 34)),
       m_barColor(QColor(0, 0, 0, 0)), m_playingBarColor(QColor(0, 0, 0, 0)),
-      m_isPlaying(false), m_lastMouseX(0) {
+      m_isPlaying(false), m_lastMouseX(0), m_seekTimer(new QTimer(this)) {
+  m_seekTimer->setSingleShot(true);
+  connect(m_seekTimer, &QTimer::timeout, this, &RythmoWidget::triggerSeek);
   setAutoFillBackground(false);
   setAttribute(Qt::WA_TranslucentBackground);
 }
@@ -19,16 +22,31 @@ RythmoWidget::RythmoWidget(QWidget *parent)
 // Helpers (Centralized logic)
 // ============================================================================
 
+void RythmoWidget::requestDebouncedSeek(qint64 positionMs) {
+  m_currentPosition = positionMs;
+  update(); // Instant visual feedback
+  m_seekTimer->start(200); // 200ms debounce
+}
+
+void RythmoWidget::triggerSeek() {
+  emit scrubRequested(m_currentPosition);
+}
+
 QFont RythmoWidget::getFont() const {
-  QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-  font.setPointSize(m_fontSize);
-  font.setBold(true);
-  return font;
+  if (m_cachedCharWidth == -1) {
+    m_cachedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    m_cachedFont.setPointSize(m_fontSize);
+    m_cachedFont.setBold(true);
+  }
+  return m_cachedFont;
 }
 
 int RythmoWidget::charWidth() const {
-  QFontMetrics fm(getFont());
-  return fm.horizontalAdvance('A');
+  if (m_cachedCharWidth == -1) {
+    QFontMetrics fm(getFont());
+    m_cachedCharWidth = fm.horizontalAdvance('A');
+  }
+  return m_cachedCharWidth;
 }
 
 int RythmoWidget::cursorIndex() const {
@@ -68,6 +86,13 @@ void RythmoWidget::setText(const QString &text) {
 }
 
 QString RythmoWidget::text() const { return m_text; }
+
+void RythmoWidget::setTextColor(const QColor &color) {
+  if (m_textColor != color) {
+    m_textColor = color;
+    update();
+  }
+}
 
 // Visual Style
 void RythmoWidget::setVisualStyle(VisualStyle style) {
@@ -122,41 +147,54 @@ QSize RythmoWidget::sizeHint() const {
 
 void RythmoWidget::paintEvent(QPaintEvent *event) {
   Q_UNUSED(event);
-
+ 
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
-
+ 
   // 1. Calculate Layout Dimensions
   int headerHeight = 0;
   if (m_visualStyle == Standalone || m_visualStyle == UnifiedTop) {
     headerHeight = 25; // Matching sizeHint (Increased from 15)
   }
-
+ 
   int bandHeight = height() - headerHeight;
   int bandY = headerHeight;
   QRect bandRect(0, bandY, width(), bandHeight);
-
-  // 2. Draw Band Background
-  QColor bgColor = m_isPlaying ? m_playingBarColor : m_barColor;
-  painter.fillRect(bandRect, bgColor);
-
-  // 3. Draw Scrolling Text (Layer 1)
-  double pixelOffset = (double(m_currentPosition) / 1000.0) * m_speed;
+ 
+  // 2. Map Layout Parameters for use in Layers
+  int cw = charWidth();
   int targetX = width() / 5;
+  double pixelOffset = (double(m_currentPosition) / 1000.0) * m_speed;
   double textStartX = targetX - pixelOffset;
 
-  QFont font = getFont();
-  painter.setFont(font);
-  painter.setPen(m_textColor);
-
-  // Vertically center text in the BAND area
-  int textY = bandY + (bandHeight + m_fontSize) / 2 - 2;
-  painter.drawText(QPointF(textStartX, textY), m_text);
-
-  // 4. Draw Band Border (Layer 2)
+  // 3. Draw Band Background
+  QColor bgColor = m_isPlaying ? m_playingBarColor : m_barColor;
+  painter.fillRect(bandRect, bgColor);
+ 
+  // 4. Draw Scrolling Text (Layer 1) - VIRTUALIZED
+  if (cw > 0) {
+    QFont font = getFont();
+    painter.setFont(font);
+    painter.setPen(m_textColor);
+ 
+    // Vertically center text in the BAND area
+    int textY = bandY + (bandHeight + m_fontSize) / 2 - 2;
+ 
+    // PERFORMANCE: Calculate visible range
+    int firstVisibleIdx = std::max(0, static_cast<int>(-textStartX / cw));
+    int lastVisibleIdx = std::min(static_cast<int>(m_text.length()), 
+                                 static_cast<int>((width() - textStartX) / cw) + 1);
+ 
+    if (firstVisibleIdx < lastVisibleIdx) {
+        QString visibleText = m_text.mid(firstVisibleIdx, lastVisibleIdx - firstVisibleIdx);
+        painter.drawText(QPointF(textStartX + (firstVisibleIdx * cw), textY), visibleText);
+    }
+  }
+ 
+  // 5. Draw Band Border (Layer 2)
   QPen borderPen(QColor(0, 120, 215), 2);
   painter.setPen(borderPen);
-
+ 
   if (m_visualStyle == Standalone) {
     painter.drawRect(bandRect);
   } else if (m_visualStyle == UnifiedTop) {
@@ -164,44 +202,40 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
   } else if (m_visualStyle == UnifiedBottom) {
     painter.drawRect(bandRect);
   }
-
-  // 5. Draw Target Line (Guide)
+ 
+  // 6. Draw Target Line (Guide)
   QPen targetPen(QColor(0, 120, 215), 2);
   targetPen.setStyle(Qt::DashLine);
   painter.setPen(targetPen);
   painter.drawLine(targetX, bandY, targetX, bandY + bandHeight);
-
-  // 6. Draw Edit Cursor (Unified Blue Line)
-  int cw = charWidth();
+ 
+  // 7. Draw Edit Cursor (Unified Blue Line)
   if (cw > 0) {
     int idx = cursorIndex();
     double cursorScreenX = textStartX + (idx * cw);
-
+ 
     bool drawHandle =
         (m_visualStyle == Standalone || m_visualStyle == UnifiedTop);
     bool drawLabel =
         (m_visualStyle == Standalone || m_visualStyle == UnifiedTop);
-
+ 
     // Line Geometry
     int lineTop = bandY;
     int lineBottom = bandY + bandHeight;
-
+ 
     // Adjust line for Unified look
     if (m_visualStyle == UnifiedTop)
       lineBottom += 2;
     if (m_visualStyle == UnifiedBottom)
       lineTop -= 2;
-
+ 
     // Vertical Line
     QPen cursorPen(QColor(0, 120, 215), 3);
     painter.setPen(cursorPen);
     painter.drawLine(cursorScreenX, lineTop, cursorScreenX, lineBottom);
-
+ 
     // Triangle Handle (In Header Area)
     if (drawHandle) {
-      // Draw handle at bottom of header, pointing down to band
-      // Handle height ~10px.
-      // Position: 15 to 25.
       QPolygon tri;
       tri << QPoint(cursorScreenX, bandY)           // Point at thread (25)
           << QPoint(cursorScreenX - 5, bandY - 10)  // Left Top (15)
@@ -209,7 +243,7 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
       painter.setBrush(QColor(0, 120, 215));
       painter.drawPolygon(tri);
     }
-
+ 
     if (drawLabel) {
       int mm = (m_currentPosition / 60000) % 60;
       int ss = (m_currentPosition / 1000) % 60;
@@ -218,16 +252,11 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
                             .arg(mm, 2, 10, QChar('0'))
                             .arg(ss, 2, 10, QChar('0'))
                             .arg(ms, 3, 10, QChar('0'));
-
+ 
       painter.setPen(QColor(34, 34, 34));
       QFont smallFont("Segoe UI", 8, QFont::Bold);
       painter.setFont(smallFont);
       int tw = painter.fontMetrics().horizontalAdvance(timeStr);
-      // Draw centered above handle in the 15px space
-      // Header available: 0..25.
-      // Handle occupies 15..25.
-      // Text space: 0..15.
-      // Baseline at 12 should fit nicely directly under the top edge.
       painter.drawText(cursorScreenX - tw / 2, bandY - 12, timeStr);
     }
   }
@@ -248,9 +277,10 @@ void RythmoWidget::mousePressEvent(QMouseEvent *event) {
 
   // Pixel-perfect seek
   double timeDeltaMs = (double(clickX - targetX) * 1000.0) / m_speed;
-  qint64 newTime = m_currentPosition + static_cast<qint64>(timeDeltaMs);
+  qint64 newTime = std::max(qint64(0), m_currentPosition + static_cast<qint64>(timeDeltaMs));
 
-  emit scrubRequested(std::max(qint64(0), newTime));
+  // Visual Instant Feedback
+  requestDebouncedSeek(newTime);
   setFocus();
 }
 
@@ -264,9 +294,10 @@ void RythmoWidget::mouseMoveEvent(QMouseEvent *event) {
 
   // Dragging logic
   double timeDeltaMs = (double(deltaX) * 1000.0) / m_speed;
-  qint64 newTime = m_currentPosition - static_cast<qint64>(timeDeltaMs);
+  qint64 newTime = std::max(qint64(0), m_currentPosition - static_cast<qint64>(timeDeltaMs));
 
-  emit scrubRequested(std::max(qint64(0), newTime));
+  sync(newTime);
+  requestDebouncedSeek(newTime);
 }
 
 void RythmoWidget::mouseDoubleClickEvent(QMouseEvent *event) {
@@ -282,11 +313,13 @@ void RythmoWidget::keyPressEvent(QKeyEvent *event) {
 
   // Navigation
   if (event->key() == Qt::Key_Left) {
-    emit scrubRequested(std::max(qint64(0), m_currentPosition - step));
+    qint64 newTime = std::max(qint64(0), m_currentPosition - step);
+    requestDebouncedSeek(newTime);
     return;
   }
   if (event->key() == Qt::Key_Right) {
-    emit scrubRequested(m_currentPosition + step);
+    qint64 newTime = m_currentPosition + step;
+    requestDebouncedSeek(newTime);
     return;
   }
 
@@ -297,7 +330,8 @@ void RythmoWidget::keyPressEvent(QKeyEvent *event) {
       m_text.append(' ');
     }
     m_text.insert(idx, ' ');
-    emit scrubRequested(m_currentPosition + step);
+    qint64 newTime = m_currentPosition + step;
+    requestDebouncedSeek(newTime);
     emit playRequested();
     return;
   }
@@ -308,7 +342,8 @@ void RythmoWidget::keyPressEvent(QKeyEvent *event) {
   if (event->key() == Qt::Key_Backspace) {
     if (idx > 0 && idx <= m_text.length()) {
       m_text.remove(idx - 1, 1);
-      emit scrubRequested(std::max(qint64(0), m_currentPosition - step));
+      qint64 newTime = std::max(qint64(0), m_currentPosition - step);
+      requestDebouncedSeek(newTime);
     }
     return;
   }
@@ -328,6 +363,7 @@ void RythmoWidget::keyPressEvent(QKeyEvent *event) {
       m_text.append(' ');
     }
     m_text.insert(idx, event->text());
-    emit scrubRequested(m_currentPosition + step);
+    qint64 newTime = m_currentPosition + step;
+    requestDebouncedSeek(newTime);
   }
 }

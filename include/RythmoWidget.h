@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+class QTimer;
+
 /**
  * @brief RythmoWidget displays a scrolling text band synchronized with video
  * position. It simulates a "Bande Rythmo" used in dubbing.
@@ -30,6 +32,8 @@ public:
   void setText(const QString &text);
   QString text() const;
 
+  void setTextColor(const QColor &color);
+
 public slots:
   void sync(qint64 positionMs);
   void setPlaying(bool playing);
@@ -50,6 +54,8 @@ protected:
 
 private:
   // Helpers
+  void requestDebouncedSeek(qint64 positionMs);
+  void triggerSeek();
   QFont getFont() const;
   int charWidth() const;
   int cursorIndex() const;
@@ -73,6 +79,13 @@ private:
 
   // Visual Style
   VisualStyle m_visualStyle = Standalone;
+
+  // Performance Cache
+  mutable QFont m_cachedFont;
+  mutable int m_cachedCharWidth = -1;
+
+  // Seek Debouncing
+  QTimer *m_seekTimer;
 };
 
 #endif // RYTHMOWIDGET_H

@@ -1,6 +1,6 @@
-# DUBSync - Professional Video Dubbing Studio
+# DubInstante - Professional Video Dubbing Studio
 
-**DUBSync** is a professional video dubbing software designed to be powerful, intuitive, and visually refined.
+**DubInstante** is a professional video dubbing software designed to be powerful, intuitive, and visually refined.
 
 ## 📚 Documentation
 
@@ -18,7 +18,7 @@ sudo apt install qt6-multimedia-dev libqt6opengl6-dev ffmpeg
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
-./DUBSync
+./DubInstante
 ```
 
 ### Key Features / Fonctionnalités Principales
@@ -41,5 +41,5 @@ Open-source - Contributions welcome! / Contributions bienvenues!
 
 ---
 
-**DUBSync** - Making professional video dubbing accessible to everyone.  
-**DUBSync** - Rendre le doublage vidéo professionnel accessible à tous.
+**DubInstante** - Making professional video dubbing accessible to everyone.  
+**DubInstante** - Rendre le doublage vidéo professionnel accessible à tous.

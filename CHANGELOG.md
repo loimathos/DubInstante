@@ -1,9 +1,30 @@
 # Changelog
 
-All notable changes to DUBSync will be documented in this file.
+All notable changes to **DubInstante** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.3.0] - 2026-01-24
+
+### Added
+- **Rythmo Text Color Toggle**: Switch between Black and White text for better visibility on different video backgrounds
+- **Virtualized Rythmo Rendering**: Drastically improved performance by only rendering the visible portion of the text band.
+- **Instant Editing Feedback**: Decoupled text input and scrolling from video engine latency, ensuring smooth typing even on massive (50GB+) files.
+- **Professional Seek Debouncing**: Implemented smart batching of video seek requests during rapid editing or scrubbing to prevent disk I/O saturation.
+
+### Fixed
+- **Large File Lag**: Resolved significant performance drops and UI freezing when working with 50min+ videos.
+- **Missing Icons**: Resolved "Cannot open file" errors for `volume_up.svg` and `fiber_manual_record.svg` by mapping them to existing assets
+
+### Technical
+- **Font Metric Caching**: Implemented caching for fixed-font character widths to reduce CPU overhead during text rendering.
+- **Optimized Paint Pipeline**: Refined the RythmoWidget refresh cycle for smoother animations and lower power consumption.
+
+## [1.2.0] - 2026-01-21
+
+### Added
+- **Project Rebranding**: Officially renamed the software from DUBSync to **DubInstante**
 
 ## [1.1.0] - 2026-01-21
 

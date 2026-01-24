@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(DUBSync VERSION 0.1 LANGUAGES CXX)
+project(DubInstante VERSION 1.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,9 +9,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia OpenGLWidgets OpenGL)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia MultimediaWidgets OpenGLWidgets OpenGL)
 
-add_executable(DUBSync
+add_executable(DubInstante
     main.cpp
     src/MainWindow.cpp
     src/Exporter.cpp
@@ -31,11 +31,12 @@ add_executable(DUBSync
     resources.qrc
 )
 
-target_include_directories(DUBSync PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(DubInstante PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(DUBSync PRIVATE
+target_link_libraries(DubInstante PRIVATE
     Qt6::Widgets
     Qt6::Multimedia
+    Qt6::MultimediaWidgets
     Qt6::OpenGLWidgets
     Qt6::OpenGL
 )

@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
       "/temp_dub_2.wav";
 
   // 0. General Window Settings
-  setWindowTitle("DUBSync - Studio");
+  setWindowTitle("DubInstante - Studio");
   resize(900, 600); // Even smaller default
   setMinimumSize(800, 500);
 }
@@ -81,7 +81,7 @@ void MainWindow::setupUi() {
   playerContainerLayout->addWidget(videoFrame, 1);
 
   // Rythmo Overlay (OOP)
-  // Reparent to videoFrame so it sits on top
+  // Reparent to videoFrame so it sits on top of VideoWidget
   m_rythmoOverlay->setParent(videoFrame);
   m_rythmoOverlay->show();
 
@@ -126,7 +126,7 @@ void MainWindow::setupUi() {
   controlsLayout->addStretch();
 
   m_volumeButton =
-      new QPushButton(QIcon(":/resources/icons/volume_up.svg"), "", this);
+      new QPushButton(QIcon(":/resources/icons/arrow_up.svg"), "", this);
   m_volumeButton->setFixedSize(24, 24);
   m_volumeButton->setFlat(true);
   controlsLayout->addWidget(m_volumeButton);
@@ -146,7 +146,7 @@ void MainWindow::setupUi() {
   controlsLayout->addWidget(m_volumeSpinBox);
 
   m_recordButton = new QPushButton(
-      QIcon(":/resources/icons/fiber_manual_record.svg"), "REC", this);
+      QIcon(":/resources/icons/record.svg"), "REC", this);
   m_recordButton->setObjectName("recordButton");
   m_recordButton->setCheckable(true);
   m_recordButton->setFixedSize(90, 36);
@@ -298,6 +298,9 @@ void MainWindow::setupUi() {
   speedControlRow->addWidget(m_speedSpinBox);
   speedLayout->addLayout(speedControlRow);
 
+  m_textColorCheck = new QCheckBox("Texte Blanc", this);
+  speedLayout->addWidget(m_textColorCheck);
+
   bottomControlsLayout->addLayout(speedLayout);
 
   bottomControlsLayout->addSpacing(20);
@@ -415,6 +418,11 @@ void MainWindow::setupConnections() {
   // Speed spinbox -> RythmoOverlay (Updates both tracks)
   connect(m_speedSpinBox, &QSpinBox::valueChanged, m_rythmoOverlay,
           &RythmoOverlay::setSpeed);
+
+  connect(m_textColorCheck, &QCheckBox::toggled, this, [this](bool checked) {
+    QColor color = checked ? QColor(Qt::white) : QColor(34, 34, 34);
+    m_rythmoOverlay->setTextColor(color);
+  });
 
   connect(m_recordButton, &QPushButton::clicked, this,
           &MainWindow::toggleRecording);

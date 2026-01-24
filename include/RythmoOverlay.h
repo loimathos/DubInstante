@@ -21,6 +21,7 @@ public:
   void sync(qint64 positionMs);
   void setPlaying(bool playing);
   void setSpeed(int speed);
+  void setTextColor(const QColor &color);
 
 protected:
   void paintEvent(QPaintEvent *event) override;

@@ -90,6 +90,7 @@ private:
 
   QPushButton *m_recordButton;
   QSpinBox *m_speedSpinBox;
+  QCheckBox *m_textColorCheck;
   QProgressBar *m_exportProgressBar;
 
   int m_previousVolume;

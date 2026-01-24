@@ -1,6 +1,6 @@
-# DUBSync - Studio de Doublage Vidéo Professionnel
+# DubInstante - Studio de Doublage Vidéo Professionnel
 
-DUBSync est un logiciel de doublage vidéo professionnel conçu pour être puissant, intuitif et visuellement raffiné. Il permet de lire des vidéos, d'écrire des textes de doublage sur une bande rythmo, d'enregistrer des pistes vocales synchronisées et d'exporter le résultat final.
+DubInstante est un logiciel de doublage vidéo professionnel conçu pour être puissant, intuitif et visuellement raffiné. Il permet de lire des vidéos, d'écrire des textes de doublage sur une bande rythmo, d'enregistrer des pistes vocales synchronisées et d'exporter le résultat final.
 
 ## ✨ Fonctionnalités Principales
 
@@ -61,7 +61,7 @@ DUBSync est un logiciel de doublage vidéo professionnel conçu pour être puiss
 ### Windows
 Le projet est automatiquement compilé pour Windows via GitHub Actions.
 1. Allez sur l'onglet **Actions** de ce dépôt
-2. Téléchargez le dernier artefact **DUBSync-Windows**
+2. Téléchargez le dernier artefact **DubInstante-Windows**
 
 ### Linux (Compilation Manuelle)
 1. Installez les dépendances:
@@ -73,7 +73,7 @@ Le projet est automatiquement compilé pour Windows via GitHub Actions.
    mkdir build && cd build
    cmake ..
    make -j$(nproc)
-   ./DUBSync
+   ./DubInstante
    ```
 
 ## 🎹 Raccourcis Clavier & Utilisation
@@ -117,7 +117,7 @@ Le projet est automatiquement compilé pour Windows via GitHub Actions.
 
 ## 🎨 Philosophie de Design UI
 
-DUBSync présente une interface utilisateur soigneusement conçue avec:
+DubInstante présente une interface utilisateur soigneusement conçue avec:
 - **Thème Professionnel Épuré**: Schéma de couleurs claires avec profondeur subtile
 - **Contrôles Raffinés**: Spinboxes, sliders et boutons soignés
 - **Hiérarchie Visuelle**: Organisation claire des contrôles par fonction
@@ -141,4 +141,4 @@ Veuillez ouvrir une issue ou soumettre une pull request.
 
 ---
 
-**DUBSync** - Rendre le doublage vidéo professionnel accessible à tous.
+**DubInstante** - Rendre le doublage vidéo professionnel accessible à tous.
