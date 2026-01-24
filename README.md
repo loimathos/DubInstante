@@ -44,3 +44,10 @@ Open-source - Contributions welcome! / Contributions bienvenues!
 
 **DubInstante** - Making professional video dubbing accessible to everyone.  
 **DubInstante** - Rendre le doublage vidéo professionnel accessible à tous.
+
+## 🗺️ Roadmap
+- **v1.4.0**: Customization & Independent Band Styling / Personnalisation & Styles de bandes
+- **v1.5.0**: Project Save/Load System / Sauvegarde & Chargement de projet
+- **v1.6.0**: Fullscreen Mode & Pro Shortcuts / Mode Plein Écran & Raccourcis Pro
+- **+** User-driven features! / Des idées d'utilisateurs bienvenues !
+

@@ -110,7 +110,7 @@ The project is automatically compiled for Windows via GitHub Actions.
 - **Speed Adjustment**: Use "Vitesse Défilement" spinbox to slow down or speed up playback
 - **Visual Styles**: Configure rythmo band appearance in the code (RythmoWidget::VisualStyle)
 
-## 🔧 Configuration
+##  Configuration
 
 ### Rythmo Visual Styles
 Edit `RythmoWidget.cpp` to customize the rythmo appearance:
@@ -146,3 +146,18 @@ Please open an issue or submit a pull request.
 ---
 
 **DubInstante** - Making professional video dubbing accessible to everyone.
+
+## 🗺️ Roadmap
+- **v1.4.0 - Customization Update**
+    - [ ] Advanced Rythmo Band styling (Custom background and text colors)
+    - [ ] Dedicated sub-menu for independent settings per band
+    - [ ] Visual tweaking that preserves original layout/position
+- **v1.5.0 - Project Management**
+    - [ ] Save/Load system for session states (Dedicated project file format)
+    - [ ] Persistence of all Rythmo text and modified application parameters
+- **v1.6.0 - Pro Experience**
+    - [ ] Full-screen recording mode
+    - [ ] Global keyboard shortcuts for recording control (pause and other actions)
+- **And more...**
+    - [ ] We are always listening! User suggestions and ideas are always welcome 💡
+

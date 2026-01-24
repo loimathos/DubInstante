@@ -146,3 +146,18 @@ Veuillez ouvrir une issue ou soumettre une pull request.
 ---
 
 **DubInstante** - Rendre le doublage vidéo professionnel accessible à tous.
+
+## 🗺️ Roadmap
+- **v1.4.0 - Mise à jour Personnalisation**
+    - [ ] Personnalisation avancée des bandes rythmo (Couleurs de fond et de texte)
+    - [ ] Sous-menu dédié pour le réglage indépendant de chaque bande
+    - [ ] Ajustements visuels sans impact sur la position/mise en page
+- **v1.5.0 - Gestion de Projet**
+    - [ ] Système de Sauvegarde/Chargement d'état (Format de fichier projet dédié)
+    - [ ] Persistance de tout le texte rythmo et des paramètres modifiés
+- **v1.6.0 - Expérience Pro**
+    - [ ] Mode d'enregistrement plein écran
+    - [ ] Raccourcis clavier complets pour le contrôle (pause et autres actions)
+- **Et plus encore...**
+    - [ ] À l'écoute des utilisateurs ! Vos idées et suggestions sont toujours les bienvenues 💡
+
