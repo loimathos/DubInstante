@@ -25,6 +25,7 @@ make -j$(nproc)
 
 - 🎬 **Video Playback** / Lecture vidéo haute performance
 - 📝 **Dual Rythmo Bands** / Double bande rythmo
+- ⚡ **High Performance** / Support des fichiers massifs (50GB+)
 - 🎙️ **Multi-Track Recording** / Enregistrement multipiste
 - 🎨 **Modern UI** / Interface moderne et professionnelle
 - 📤 **Export** / Exportation FFmpeg

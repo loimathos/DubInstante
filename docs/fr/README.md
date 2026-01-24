@@ -13,6 +13,10 @@ DubInstante est un logiciel de doublage vidéo professionnel conçu pour être p
 ### 📝 Système de Bande Rythmo
 - **Double Bande Rythmo**: Deux bandes de texte défilant indépendantes pour les workflows complexes
 - **Édition Interactive**: Saisie de texte directe sur la bande rythmo avec aperçu en temps réel
+- **Rendu Virtualisé**: Ne dessine que le texte visible, permettant des enregistrements infinis sans lag
+- **Réaction Instantanée**: Découplage de l'interface et du moteur vidéo pour une frappe fluide sur gros fichiers
+- **Seek Debouncing**: Regroupement intelligent des recherches pour éviter la saturation disque (50GB+)
+- **Contraste du Texte**: Bouton "Texte Blanc" pour switcher la couleur selon le fond vidéo
 - **Styles Visuels**: Plusieurs modes d'affichage (Classique, Gradient moderne, Minimaliste, Contouré)
 - **Synchronisation Temporelle**: Défilement automatique en synchronisation avec la vidéo
 - **Navigation par Clic**: Cliquez n'importe où sur la bande rythmo pour sauter à cet instant
@@ -66,7 +70,7 @@ Le projet est automatiquement compilé pour Windows via GitHub Actions.
 ### Linux (Compilation Manuelle)
 1. Installez les dépendances:
    ```bash
-   sudo apt install qt6-multimedia-dev libqt6opengl6-dev ffmpeg
+   sudo apt install qt6-multimedia-dev libqt6multimediawidgets6 libqt6opengl6-dev ffmpeg
    ```
 2. Compilation:
    ```bash

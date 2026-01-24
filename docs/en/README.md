@@ -13,6 +13,10 @@ DubInstante is a professional video dubbing software designed to be powerful, in
 ### 📝 Rythmo Band System
 - **Dual Rythmo Bands**: Two independent scrolling text bands for complex dubbing workflows
 - **Interactive Editing**: Direct text input on the rythmo band with real-time preview
+- **Virtualized Rendering**: Only renders visible text, allowing for infinite recording length with zero lag
+- **Instant Feedback**: Decoupled UI updates from video engine for smooth editing on large files
+- **Seek Debouncing**: Smart batching of seeks to prevent disk saturation on massive files (50GB+)
+- **Text Color Toggle**: Switch between Black and White text for optimal contrast
 - **Visual Styles**: Multiple display modes (Classic box, Modern gradient, Minimal text-only, Outlined)
 - **Time-Synchronized**: Automatically scrolls in sync with video playback
 - **Click-to-Navigate**: Click anywhere on the rythmo to jump to that timestamp
@@ -66,7 +70,7 @@ The project is automatically compiled for Windows via GitHub Actions.
 ### Linux (Manual Build)
 1. Install dependencies:
    ```bash
-   sudo apt install qt6-multimedia-dev libqt6opengl6-dev ffmpeg
+   sudo apt install qt6-multimedia-dev libqt6multimediawidgets6 libqt6opengl6-dev ffmpeg
    ```
 2. Build:
    ```bash
