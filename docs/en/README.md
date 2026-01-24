@@ -80,6 +80,12 @@ The project is automatically compiled for Windows via GitHub Actions.
    ./DubInstante
    ```
 
+### 📦 Build AppImage
+For standalone distribution on Linux:
+```bash
+./deploy/build_appimage.sh
+```
+
 ## 🎹 Keyboard Shortcuts & Usage
 
 ### Playback Controls

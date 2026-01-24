@@ -34,7 +34,14 @@ moc_predefs.h
 *.dll
 *.so
 *.dylib
-DUBSync
+DubInstante
+*.AppImage
+
+# Deployment & Packaging
+build_release/
+deploy/
+dist_appimage/
+tools/
 
 # Temporary files
 *.tmp

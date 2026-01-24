@@ -80,6 +80,12 @@ Le projet est automatiquement compilé pour Windows via GitHub Actions.
    ./DubInstante
    ```
 
+### 📦 Créer une AppImage
+Pour une distribution standalone sur Linux:
+```bash
+./deploy/build_appimage.sh
+```
+
 ## 🎹 Raccourcis Clavier & Utilisation
 
 ### Contrôles de Lecture
