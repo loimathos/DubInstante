@@ -194,6 +194,14 @@ private:
   // Seek debouncing
   QTimer *m_seekTimer;
   qint64 m_pendingSeekPosition;
+
+  // Animation & Smoothness
+  QTimer *m_animationTimer;
+  qint64 m_lastSyncPosition = 0;
+  qint64 m_lastSyncTime = 0; // System time (ms) at last sync
+
+private slots:
+  void animate();
 };
 
 #endif // RYTHMOWIDGET_H

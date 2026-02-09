@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 
+#include <QDateTime>
 #include <algorithm>
 
 RythmoWidget::RythmoWidget(QWidget *parent)
@@ -19,9 +20,14 @@ RythmoWidget::RythmoWidget(QWidget *parent)
       m_verticalPadding(4), m_textColor(QColor(34, 34, 34)),
       m_barColor(QColor(0, 0, 0, 0)), m_playingBarColor(QColor(0, 0, 0, 0)),
       m_lastMouseX(0), m_cachedCharWidth(-1), m_seekTimer(new QTimer(this)),
-      m_pendingSeekPosition(0) {
+      m_pendingSeekPosition(0), m_animationTimer(new QTimer(this)),
+      m_lastSyncPosition(0), m_lastSyncTime(0) {
   m_seekTimer->setSingleShot(true);
   connect(m_seekTimer, &QTimer::timeout, this, &RythmoWidget::triggerSeek);
+
+  // 60 FPS animation loop
+  m_animationTimer->setInterval(16);
+  connect(m_animationTimer, &QTimer::timeout, this, &RythmoWidget::animate);
 
   setAutoFillBackground(false);
   setAttribute(Qt::WA_TranslucentBackground);
@@ -92,21 +98,58 @@ void RythmoWidget::updatePosition(int cursorIndex, qint64 positionMs) {
 void RythmoWidget::setPlaying(bool playing) {
   if (m_isPlaying != playing) {
     m_isPlaying = playing;
-    update();
+
+    if (m_isPlaying) {
+      // Start animation loop
+      m_lastSyncPosition = m_currentPosition;
+      m_lastSyncTime = QDateTime::currentMSecsSinceEpoch();
+      m_animationTimer->start();
+    } else {
+      // Stop animation loop
+      m_animationTimer->stop();
+      // Force one last update
+      update();
+    }
   }
 }
 
 void RythmoWidget::sync(qint64 positionMs) {
-  if (m_currentPosition != positionMs) {
-    m_currentPosition = positionMs;
-    // Recalculate cursor index locally (for backward compatibility)
-    int cw = charWidth();
-    if (cw > 0) {
-      double distPixels = (static_cast<double>(positionMs) / 1000.0) * m_speed;
-      m_cursorIndex = static_cast<int>(distPixels / cw);
+  // Always update anchor points for interpolation
+  m_lastSyncPosition = positionMs;
+  m_lastSyncTime = QDateTime::currentMSecsSinceEpoch();
+
+  // If not animating (paused), update strictly to valid position
+  if (!m_isPlaying) {
+    if (m_currentPosition != positionMs) {
+      m_currentPosition = positionMs;
+      // Recalculate cursor index locally (for backward compatibility)
+      int cw = charWidth();
+      if (cw > 0) {
+        double distPixels =
+            (static_cast<double>(positionMs) / 1000.0) * m_speed;
+        m_cursorIndex = static_cast<int>(distPixels / cw);
+      }
+      update();
     }
-    update();
   }
+}
+
+void RythmoWidget::animate() {
+  if (!m_isPlaying)
+    return;
+
+  qint64 now = QDateTime::currentMSecsSinceEpoch();
+  qint64 elapsed = now - m_lastSyncTime;
+
+  // Extrapolate position based on time elapsed since last sync
+  m_currentPosition = m_lastSyncPosition + elapsed;
+
+  // Note: m_cursorIndex will be calculated on-the-fly in paintEvent
+  // via cursorIndex() method, or we could update it here if needed.
+  // Given paintEvent uses cursorIndex(), just updating m_currentPosition is
+  // enough.
+
+  update();
 }
 
 // =============================================================================
@@ -135,7 +178,7 @@ int RythmoWidget::cursorIndex() const {
   if (cw <= 0)
     return 0;
   double distPixels = (double(m_currentPosition) / 1000.0) * m_speed;
-  return static_cast<int>(distPixels / cw);
+  return qRound(distPixels / cw); // Round to nearest char for intuitive snap
 }
 
 qint64 RythmoWidget::charDurationMs() const {
@@ -197,8 +240,10 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
   // 2. Calculate drawing parameters
   int cw = charWidth();
   int targetX = width() / 5; // Target line position
-  double pixelOffset =
-      (static_cast<double>(m_currentPosition) / 1000.0) * m_speed;
+
+  // Snap to character grid for precise alignment with cursor
+  double pixelOffset = static_cast<double>(cursorIndex() * cw);
+
   double textStartX = targetX - pixelOffset;
 
   // 3. Draw band background
@@ -238,9 +283,10 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
   painter.setPen(targetPen);
   painter.drawLine(targetX, bandY, targetX, bandY + bandHeight);
 
-  // 7. Draw edit cursor
+  // 7. Draw edit cursor (always at targetX to align with playback line)
   if (cw > 0) {
-    double cursorScreenX = textStartX + (m_cursorIndex * cw);
+    // Force cursor to targetX for perfect alignment with target line
+    double cursorScreenX = targetX;
 
     bool drawHandle =
         (m_visualStyle == Standalone || m_visualStyle == UnifiedTop);
@@ -370,7 +416,13 @@ void RythmoWidget::keyPressEvent(QKeyEvent *event) {
   int idx = cursorIndex();
 
   if (event->key() == Qt::Key_Backspace) {
-    if (idx > 0 && idx <= m_text.length()) {
+    // If we are BEYOND the text, just move back
+    if (idx > m_text.length()) {
+      qint64 newTime = std::max(qint64(0), m_currentPosition - step);
+      requestDebouncedSeek(newTime);
+    }
+    // If we are AT or WITHIN text, delete character and move back
+    else if (idx > 0 && idx <= m_text.length()) {
       m_text.remove(idx - 1, 1);
       qint64 newTime = std::max(qint64(0), m_currentPosition - step);
       requestDebouncedSeek(newTime);
