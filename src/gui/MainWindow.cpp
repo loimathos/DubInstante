@@ -659,8 +659,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
       return;
     }
   }
-}
-else {
+
   QMainWindow::keyPressEvent(event);
-}
 }
