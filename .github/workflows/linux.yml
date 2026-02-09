@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y qt6-multimedia-dev libqt6opengl6-dev ffmpeg wget libfuse2
+        sudo apt install -y qt6-multimedia-dev libqt6opengl6-dev ffmpeg wget libfuse2 libgl1-mesa-dev
 
     - name: Build and Package AppImage
       run: |
