@@ -43,8 +43,15 @@ jobs:
         copy build\Release\DubInstante.exe dist\
         windeployqt --release --no-translations --compiler-runtime --multimedia dist\DubInstante.exe
 
+    - name: Get Version
+      id: get_version
+      shell: bash
+      run: |
+        VERSION=$(grep -m 1 -oP '(?<=\[)\d+\.\d+\.\d+(?=\])' CHANGELOG.md)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: DubInstante-Windows
+        name: DubInstante_windows_${{ steps.get_version.outputs.version }}
         path: dist/
