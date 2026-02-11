@@ -70,13 +70,32 @@ set(UTILS_SOURCES
 # Executable
 # =============================================================================
 
-add_executable(DubInstante
-    main.cpp
-    ${CORE_SOURCES}
-    ${GUI_SOURCES}
-    ${UTILS_SOURCES}
-    resources.qrc
-)
+if(APPLE)
+    set(MACOS_PLIST_INFO "${CMAKE_CURRENT_SOURCE_DIR}/deploy/Info.plist")
+    add_executable(DubInstante MACOSX_BUNDLE
+        main.cpp
+        ${CORE_SOURCES}
+        ${GUI_SOURCES}
+        ${UTILS_SOURCES}
+        resources.qrc
+    )
+    set_target_properties(DubInstante PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/deploy/Info.plist"
+        MACOSX_BUNDLE_BUNDLE_NAME "DubInstante"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.dubinstante.app"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright © 2024 DubInstante"
+    )
+else()
+    add_executable(DubInstante
+        main.cpp
+        ${CORE_SOURCES}
+        ${GUI_SOURCES}
+        ${UTILS_SOURCES}
+        resources.qrc
+    )
+endif()
 
 # =============================================================================
 # Include Directories

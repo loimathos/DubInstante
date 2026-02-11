@@ -113,8 +113,17 @@ jobs:
 
     - name: Package with macdeployqt
       run: |
-        cd build
-        macdeployqt DubInstante.app -dmg -verbose=1
+        find build -name "DubInstante.app" -type d
+        APP_PATH=$(find build -name "DubInstante.app" -type d | head -n 1)
+        if [ -z "$APP_PATH" ]; then
+          echo "Error: Could not find DubInstante.app"
+          exit 1
+        fi
+        macdeployqt "$APP_PATH" -dmg -verbose=1
+        # Move the generated DMG to a predictable location if it's not already there
+        if [ -f "DubInstante.dmg" ]; then
+          mv DubInstante.dmg build/
+        fi
 
     - name: Get Version
       id: get_version
