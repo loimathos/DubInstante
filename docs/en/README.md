@@ -417,19 +417,16 @@ Pre-built binaries are available from the **Actions** tab (CI artifact: `DubInst
 
 ### macOS
 
-Pre-built DMG images are available from the **Actions** tab (CI artifact: `DubInstante_macos`).
+**Installation:**
+1. Download the `.dmg` from the **Actions** tab (CI artifact: `DubInstante_macos`).
+2. Open the `.dmg` and drag `DubInstante.app` to your **Applications** folder.
+3. Open **Terminal** and run:
+   ```bash
+   xattr -c /Applications/DubInstante.app
+   ```
+4. Launch `DubInstante.app` normally.
 
-**First Launch (Gatekeeper):**
-Since the app is not signed with an Apple Developer certificate, macOS may block it.
-1. Download the `.dmg` and drag `DubInstante.app` to your **Applications** folder.
-2. **Right-click** (or Ctrl-click) `DubInstante.app` in Applications and select **Open**.
-3. Click **Open** in the dialog that appears. You only need to do this once.
-
-**If you get "app is damaged" error**, open Terminal and run:
-```bash
-xattr -cr /Applications/DubInstante.app
-```
-Then launch the app normally.
+> **Why step 3?** The app is not signed with an Apple Developer certificate. macOS flags downloaded unsigned apps as "damaged." The `xattr -c` command removes this quarantine flag. You only need to do this once.
 
 
 ### Linux

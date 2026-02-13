@@ -417,19 +417,16 @@ L'application au format zip est disponible depuis l'onglet **Actions** (artefact
 
 ### macOS
 
-L'application au format dmg est disponible depuis l'onglet **Actions** (artefact CI : `DubInstante_macos`).
+**Installation :**
+1. Téléchargez le `.dmg` depuis l'onglet **Actions** (artefact CI : `DubInstante_macos`).
+2. Ouvrez le `.dmg` et glissez `DubInstante.app` dans votre dossier **Applications**.
+3. Ouvrez le **Terminal** et exécutez :
+   ```bash
+   xattr -c /Applications/DubInstante.app
+   ```
+4. Lancez `DubInstante.app` normalement.
 
-**Premier lancement (Gatekeeper) :**
-L'application n'étant pas signée avec un certificat Apple Developer, macOS pourra la bloquer.
-1. Téléchargez le `.dmg` et glissez `DubInstante.app` dans votre dossier **Applications**.
-2. Faites un **clic droit** (ou Ctrl-clic) sur `DubInstante.app` dans Applications et sélectionnez **Ouvrir**.
-3. Cliquez sur **Ouvrir** dans la boîte de dialogue. Cette manipulation n'est requise qu'au premier lancement.
-
-**Si l'erreur "app endommagée" persiste**, ouvrez le Terminal et exécutez :
-```bash
-xattr -cr /Applications/DubInstante.app
-```
-Puis lancez l'application normalement.
+> **Pourquoi l'étape 3 ?** L'application n'est pas signée avec un certificat Apple Developer. macOS signale les apps téléchargées non signées comme « endommagées ». La commande `xattr -c` supprime ce marquage de quarantaine. Cette manipulation n'est requise qu'au premier lancement.
 
 ### Linux
 
