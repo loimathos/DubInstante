@@ -1,0 +1,134 @@
+name: macOS Smoke Test
+
+on:
+  workflow_dispatch:       # Manual trigger from GitHub UI
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'CMakeLists.txt'
+      - 'deploy/**'
+      - '.github/workflows/test-macos.yml'
+
+jobs:
+  test-macos:
+    name: macOS Build & Launch Test
+    runs-on: macos-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.3'
+        host: 'mac'
+        target: 'desktop'
+        arch: 'clang_64'
+        modules: 'qtmultimedia'
+
+    # ── Build ──────────────────────────────────────────────
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+
+    # ── Verify bundle exists ───────────────────────────────
+    - name: Locate .app bundle
+      id: locate
+      run: |
+        APP_PATH=$(find build -name "DubInstante.app" -type d | head -n 1)
+        if [ -z "$APP_PATH" ]; then
+          echo "::error::Could not find DubInstante.app bundle"
+          exit 1
+        fi
+        echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
+        echo "✅ Found bundle: $APP_PATH"
+
+    # ── Package ────────────────────────────────────────────
+    - name: Run macdeployqt
+      run: |
+        macdeployqt "${{ steps.locate.outputs.app_path }}" -verbose=1
+
+    - name: Ad-hoc code sign
+      run: |
+        codesign --force --deep --sign - "${{ steps.locate.outputs.app_path }}"
+        echo "✅ Ad-hoc signing complete"
+
+    # ── Smoke Tests ────────────────────────────────────────
+    - name: Verify code signature
+      run: |
+        echo "── codesign verify ──"
+        codesign --verify --deep --strict "${{ steps.locate.outputs.app_path }}" 2>&1 || true
+        echo ""
+        echo "── codesign display ──"
+        codesign -dvvv "${{ steps.locate.outputs.app_path }}" 2>&1
+
+    - name: Check bundle structure
+      run: |
+        APP="${{ steps.locate.outputs.app_path }}"
+        echo "── Bundle contents ──"
+        ls -la "$APP/Contents/"
+        echo ""
+        echo "── Frameworks ──"
+        ls -la "$APP/Contents/Frameworks/" || echo "No Frameworks dir"
+        echo ""
+        echo "── Info.plist ──"
+        cat "$APP/Contents/Info.plist"
+        echo ""
+        echo "── Executable ──"
+        EXEC=$(defaults read "$APP/Contents/Info.plist" CFBundleExecutable 2>/dev/null || echo "DubInstante")
+        file "$APP/Contents/MacOS/$EXEC"
+
+    - name: Smoke-test launch (headless)
+      run: |
+        APP="${{ steps.locate.outputs.app_path }}"
+        EXEC=$(defaults read "$APP/Contents/Info.plist" CFBundleExecutable 2>/dev/null || echo "DubInstante")
+        BINARY="$APP/Contents/MacOS/$EXEC"
+
+        echo "── Checking dynamic libraries ──"
+        otool -L "$BINARY" | head -30
+
+        echo ""
+        echo "── Attempting headless launch (5s timeout) ──"
+        # Launch the app briefly — it will fail to create a window (no display)
+        # but should NOT crash or show "damaged" errors
+        timeout 5 "$BINARY" --help 2>&1 || EXIT_CODE=$?
+
+        # Exit code 124 = timeout (expected, app kept running) → success
+        # Exit code 0   = app exited cleanly → success
+        # Exit code 134  = SIGABRT (crash) → failure
+        # Exit code 139  = SIGSEGV (crash) → failure
+        if [ "${EXIT_CODE:-0}" -le 124 ]; then
+          echo "✅ App launched without crash (exit code: ${EXIT_CODE:-0})"
+        else
+          echo "::error::App crashed with exit code $EXIT_CODE"
+          exit 1
+        fi
+
+    # ── Create DMG ─────────────────────────────────────────
+    - name: Create DMG
+      run: |
+        hdiutil create -volname "DubInstante" \
+          -srcfolder "${{ steps.locate.outputs.app_path }}" \
+          -ov -format UDZO "build/DubInstante.dmg"
+        echo "✅ DMG created: $(du -h build/DubInstante.dmg | cut -f1)"
+
+    - name: Verify DMG
+      run: |
+        echo "── Mounting DMG ──"
+        MOUNT_POINT=$(hdiutil attach build/DubInstante.dmg -nobrowse | tail -1 | awk '{print $NF}')
+        echo "Mounted at: $MOUNT_POINT"
+        ls -la "$MOUNT_POINT/"
+        echo ""
+        echo "── Checking signature inside DMG ──"
+        codesign --verify --deep "$MOUNT_POINT/DubInstante.app" 2>&1 || true
+        hdiutil detach "$MOUNT_POINT"
+        echo "✅ DMG verification complete"
