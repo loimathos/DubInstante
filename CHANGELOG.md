@@ -5,11 +5,13 @@ All notable changes to **DubInstante** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.1] - 2026-02-11
+## [0.4.1] - 2026-02-13
 
 ### Fixed
+- **macOS "App is Damaged"**: Added ad-hoc code signing (`codesign --force --deep --sign -`) in CI to prevent Gatekeeper from flagging the app as damaged.
 - **macOS Build**: Repaired bundle generation and deployment. The app is now correctly packaged as a `.app` bundle inside a `.dmg`.
-- **macOS Gatekeeper**: Added documentation for first-launch workaround on Apple Silicon/Intel.
+- **macOS CI Pipeline**: Split packaging into 3 steps (macdeployqt → codesign → hdiutil) for reliability.
+- **macOS Gatekeeper Docs**: Added `xattr -cr` Terminal workaround for first-launch issues.
 
 ## [0.4.0] - 2026-02-11
 

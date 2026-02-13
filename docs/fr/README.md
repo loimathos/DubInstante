@@ -420,10 +420,16 @@ L'application au format zip est disponible depuis l'onglet **Actions** (artefact
 L'application au format dmg est disponible depuis l'onglet **Actions** (artefact CI : `DubInstante_macos`).
 
 **Premier lancement (Gatekeeper) :**
-L'application n'étant pas signées, macOS la bloquera par défaut.
+L'application n'étant pas signée avec un certificat Apple Developer, macOS pourra la bloquer.
 1. Téléchargez le `.dmg` et glissez `DubInstante.app` dans votre dossier **Applications**.
 2. Faites un **clic droit** (ou Ctrl-clic) sur `DubInstante.app` dans Applications et sélectionnez **Ouvrir**.
 3. Cliquez sur **Ouvrir** dans la boîte de dialogue. Cette manipulation n'est requise qu'au premier lancement.
+
+**Si l'erreur "app endommagée" persiste**, ouvrez le Terminal et exécutez :
+```bash
+xattr -cr /Applications/DubInstante.app
+```
+Puis lancez l'application normalement.
 
 ### Linux
 

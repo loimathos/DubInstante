@@ -119,11 +119,19 @@ jobs:
           echo "Error: Could not find DubInstante.app"
           exit 1
         fi
-        macdeployqt "$APP_PATH" -dmg -verbose=1
-        # Move the generated DMG to a predictable location if it's not already there
-        if [ -f "DubInstante.dmg" ]; then
-          mv DubInstante.dmg build/
-        fi
+        macdeployqt "$APP_PATH" -verbose=1
+
+    - name: Ad-hoc code sign
+      run: |
+        APP_PATH=$(find build -name "DubInstante.app" -type d | head -n 1)
+        codesign --force --deep --sign - "$APP_PATH"
+        echo "Ad-hoc signing complete"
+
+    - name: Create DMG
+      run: |
+        APP_PATH=$(find build -name "DubInstante.app" -type d | head -n 1)
+        APP_DIR=$(dirname "$APP_PATH")
+        hdiutil create -volname "DubInstante" -srcfolder "$APP_PATH" -ov -format UDZO "build/DubInstante.dmg"
 
     - name: Get Version
       id: get_version
