@@ -442,6 +442,37 @@ The AppImage version of the application is available from the **Actions** tab (C
 ./deploy/build_appimage.sh
 ```
 
+### Android APK
+
+The Android version of DubInstante is located in `src/phonegui`. It is a standalone Qt Quick application.
+
+#### Automated Build (GitHub Actions)
+The easiest way to get the APK is via **GitHub Actions**:
+1. Push your changes to the `main` branch.
+2. Go to the **Actions** tab on GitHub.
+3. Download the `DubInstante_Android_VERSION` artifact from the latest run.
+
+#### Local Build (Kubuntu/Ubuntu)
+To build the APK locally without installing Android Studio:
+
+1.  **Extract a standalone JDK 17** into `src/phonegui/jdk-17.0.18+8`.
+2.  **Create a `.env` file** in `src/phonegui/`:
+    ```env
+    JAVA_HOME=./jdk-17.0.18+8
+    ```
+3.  **Ensure prerequisites** are installed:
+    ```bash
+    sudo apt install python3-pip python3-venv wget unzip cmake
+    ```
+4.  **Run the setup & build script**:
+    ```bash
+    cd src/phonegui
+    ./setup_and_build_apk.sh
+    ```
+    This script will automatically download the Android SDK, NDK, and Qt for Android into a local `android-toolchain` directory (gitignored).
+
+The resulting APK will be located in `src/phonegui/build-android/android-build/build/outputs/apk/`.
+
 ---
 
 ## External Dependencies
@@ -488,15 +519,24 @@ The project uses **no external C++ libraries** beyond Qt 6. External tools are i
     - [x] Save/Load system with `.dbi` format
     - [x] ZIP archive bundling (project + video)
     - [x] Cross-platform compression
-    - [x] Full state persistence
 - **v0.5.0 — Fullscreen Recording & Shortcuts** ✅
     - [x] Fullscreen recording mode (checkbox toggle)
-    - [x] Ctrl+S stop recording shortcut
     - [x] Shortcuts popup menu
     - [x] Escape key exits fullscreen recording
-- **v0.6.0 — Customization**
-    - [ ] Custom rythmo band colors (background + text)
-    - [ ] Per-band independent settings
-    - [ ] Visual tweaks without layout impact
+- **v0.6.0 — Android Port** ✅
+    - [x] Android Phone GUI (`phonegui` module)
+    - [x] Local APK build script with SDK/NDK/Qt automation
+    - [x] GitHub Actions Android CI pipeline
+- **v0.7.0 — Web Prototype**
+    - [ ] Online prototype with `.dbi` file support
+- **v0.8.0 — Surprise**
+    - [ ] Secret features for the community
+- **v0.9.0 — Customization**
+    - [ ] Custom rythmo band colors and styles
+    - [ ] Independent band settings
+- **V1.0 — Stable Release**
+    - [ ] Stable launch on all platforms
+    - [ ] Final polish and surprises
 - **And more…**
-    - [ ] User suggestions welcome! 💡
+    - [ ] User-driven features! 💡
+```

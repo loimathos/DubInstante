@@ -5,6 +5,14 @@ All notable changes to **DubInstante** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-02-20
+
+### Added
+- **Android Port**: Complete mobile-friendly interface for record/playback on the go.
+- **Phone GUI**: Isolated `phonegui` module based on QML for touch-optimized dubbing.
+- **Local Build Automation**: `setup_and_build_apk.sh` script to set up Android toolchains (SDK/NDK/Qt) and build APKs without Android Studio.
+- **Android CI Pipeline**: Automated APK generation via GitHub Actions on every push.
+
 ## [0.5.0] - 2026-02-16
 
 ### Added

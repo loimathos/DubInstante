@@ -440,6 +440,37 @@ L'application au format AppImage est disponible depuis l'onglet **Actions** (art
 ./deploy/build_appimage.sh
 ```
 
+### Android APK
+
+La version Android de DubInstante se trouve dans `src/phonegui`. C'est une application Qt Quick autonome.
+
+#### Build Automatisé (GitHub Actions)
+La méthode la plus simple pour obtenir l'APK est via **GitHub Actions** :
+1. Poussez vos modifications sur la branche `main`.
+2. Allez dans l'onglet **Actions** sur GitHub.
+3. Téléchargez l'artefact `DubInstante_Android_VERSION` du dernier run.
+
+#### Build Local (Kubuntu/Ubuntu)
+Pour compiler l'APK localement sans installer Android Studio :
+
+1.  **Extraire un JDK 17 autonome** dans `src/phonegui/jdk-17.0.18+8`.
+2.  **Créer un fichier `.env`** dans `src/phonegui/` :
+    ```env
+    JAVA_HOME=./jdk-17.0.18+8
+    ```
+3.  **S'assurer que les prérequis** sont installés :
+    ```bash
+    sudo apt install python3-pip python3-venv wget unzip cmake
+    ```
+4.  **Lancer le script de setup & build** :
+    ```bash
+    cd src/phonegui
+    ./setup_and_build_apk.sh
+    ```
+    Ce script téléchargera automatiquement l'Android SDK, NDK et Qt pour Android dans un répertoire local `android-toolchain` (ignoré par git).
+
+L'APK final se trouvera dans `src/phonegui/build-android/android-build/build/outputs/apk/`.
+
 ---
 
 ## Dépendances Externes
@@ -486,15 +517,23 @@ Le projet n'utilise **aucune bibliothèque C++ externe** en dehors de Qt 6. Les 
     - [x] Système Sauvegarde/Chargement avec format `.dbi`
     - [x] Regroupement archive ZIP (projet + vidéo)
     - [x] Support compression multi-plateformes
-    - [x] Persistance complète de l'état
 - **v0.5.0 — Enregistrement Plein Écran & Raccourcis** ✅
     - [x] Mode d'enregistrement plein écran (case à cocher)
-    - [x] Raccourci Ctrl+S pour arrêter l'enregistrement
     - [x] Menu popup des raccourcis
     - [x] Touche Échap pour quitter l'enregistrement plein écran
-- **v0.6.0 — Personnalisation**
-    - [ ] Couleurs personnalisées des bandes rythmo (fond + texte)
+- **v0.6.0 — Port Android** ✅
+    - [x] GUI spécifique Android (module `phonegui`)
+    - [x] Script de compilation APK local automatisé
+    - [x] Pipeline CI GitHub Actions pour Android
+- **v0.7.0 — Prototype Web**
+    - [ ] Prototype en ligne avec support des fichiers `.dbi`
+- **v0.8.0 — Surprise**
+    - [ ] Fonctionnalités secrètes pour la communauté
+- **v0.9.0 — Personnalisation**
+    - [ ] Couleurs et styles de bandes personnalisés
     - [ ] Réglages indépendants par bande
-    - [ ] Ajustements visuels sans impact sur la mise en page
+- **V1.0 — Lancement Stable**
+    - [ ] Lancement stable sur toutes les plateformes
+    - [ ] Polissage final et surprises
 - **Et plus encore…**
-    - [ ] Vos suggestions sont les bienvenues ! 💡
+    - [ ] Des idées d'utilisateurs bienvenues ! 💡
