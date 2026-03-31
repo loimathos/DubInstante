@@ -14,8 +14,9 @@
 #include <QVBoxLayout>
 
 TrackSettingsDialog::TrackSettingsDialog(RythmoManager *rythmoManager,
-                                         QWidget *parent)
-    : QDialog(parent), m_rythmoManager(rythmoManager), m_currentTrackIndex(0) {
+                                         int trackCount, QWidget *parent)
+    : QDialog(parent), m_rythmoManager(rythmoManager), m_currentTrackIndex(0),
+      m_trackCount(qBound(1, trackCount, 4)) {
 
   setupUi();
 
@@ -38,21 +39,19 @@ void TrackSettingsDialog::setupUi() {
   m_trackGroup = new QButtonGroup(this);
   m_trackGroup->setExclusive(true);
 
-  m_btnTrack1 = new QPushButton(tr("Piste 1"));
-  m_btnTrack1->setCheckable(true);
-  m_btnTrack1->setChecked(true);
-
-  m_btnTrack2 = new QPushButton(tr("Piste 2"));
-  m_btnTrack2->setCheckable(true);
-
-  m_trackGroup->addButton(m_btnTrack1, 0);
-  m_trackGroup->addButton(m_btnTrack2, 1);
+  for (int i = 0; i < m_trackCount; ++i) {
+    QPushButton *btn = new QPushButton(tr("Piste %1").arg(i + 1));
+    btn->setCheckable(true);
+    if (i == 0)
+      btn->setChecked(true);
+    m_trackGroup->addButton(btn, i);
+    m_trackButtons.append(btn);
+    topLayout->addWidget(btn);
+  }
 
   connect(m_trackGroup, &QButtonGroup::idClicked, this,
           &TrackSettingsDialog::onTrackSelected);
 
-  topLayout->addWidget(m_btnTrack1);
-  topLayout->addWidget(m_btnTrack2);
   topLayout->addStretch();
   mainLayout->addLayout(topLayout);
 

@@ -22,22 +22,27 @@ struct TrackSaveData {
 };
 
 /**
+ * @struct TrackAudioSaveData
+ * @brief Saves audio input and gain for a track.
+ */
+struct TrackAudioSaveData {
+  QString audioInput;
+  float audioGain = 1.0f;
+};
+
+/**
  * @struct SaveData
  * @brief Plain data structure for session state.
  */
 struct SaveData {
   QString videoUrl;
-  float videoVolume;
-  QString audioInput1;
-  float audioGain1;
-  QString audioInput2;
-  float audioGain2;
-  bool enableTrack2;
-  int scrollSpeed;
-  bool isTextWhite;
+  float videoVolume = 1.0f;
+  int trackCount = 1;
+  int scrollSpeed = 100;
+  bool isTextWhite = false;
 
-  // Backwards compatibility: tracks list converted to struct
   QList<TrackSaveData> tracks;
+  QList<TrackAudioSaveData> audioTracks;
 };
 
 /**

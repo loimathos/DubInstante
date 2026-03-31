@@ -8,8 +8,7 @@
 #include <QPainter>
 
 RythmoOverlay::RythmoOverlay(QWidget *parent)
-    : QWidget(parent), m_rythmo1(new RythmoWidget(this)),
-      m_rythmo2(new RythmoWidget(this)), m_layout(new QVBoxLayout(this)) {
+    : QWidget(parent), m_layout(new QVBoxLayout(this)) {
   // Configure transparency
   setAttribute(Qt::WA_TranslucentBackground);
   setAutoFillBackground(false);
@@ -20,53 +19,79 @@ RythmoOverlay::RythmoOverlay(QWidget *parent)
 
   // Position tracks at bottom of overlay
   m_layout->addStretch(1);
-  m_layout->addWidget(m_rythmo1);
-  m_layout->addWidget(m_rythmo2);
 
-  // Configure visual styles for unified look
-  m_rythmo1->setVisualStyle(RythmoWidget::UnifiedTop);
-  m_rythmo2->setVisualStyle(RythmoWidget::UnifiedBottom);
-
-  // Track 2 hidden by default
-  m_rythmo2->setVisible(false);
+  // Create initial track (always at least 1)
+  RythmoWidget *firstTrack = new RythmoWidget(this);
+  firstTrack->setVisualStyle(RythmoWidget::Standalone);
+  m_tracks.append(firstTrack);
+  m_layout->addWidget(firstTrack);
 }
 
 // =============================================================================
 // Track Access
 // =============================================================================
 
-RythmoWidget *RythmoOverlay::track1() const { return m_rythmo1; }
-
-RythmoWidget *RythmoOverlay::track2() const { return m_rythmo2; }
-
-void RythmoOverlay::setTrack2Visible(bool visible) {
-  m_rythmo2->setVisible(visible);
+RythmoWidget *RythmoOverlay::track(int index) const {
+  if (index >= 0 && index < m_tracks.size()) {
+    return m_tracks[index];
+  }
+  return nullptr;
 }
 
-bool RythmoOverlay::isTrack2Visible() const { return m_rythmo2->isVisible(); }
+int RythmoOverlay::trackCount() const { return m_tracks.size(); }
+
+void RythmoOverlay::setTrackCount(int count) {
+  count = qBound(1, count, MAX_TRACKS);
+
+  // Add tracks if needed
+  while (m_tracks.size() < count) {
+    RythmoWidget *newTrack = new RythmoWidget(this);
+    m_tracks.append(newTrack);
+    m_layout->addWidget(newTrack);
+  }
+
+  // Remove tracks if needed
+  while (m_tracks.size() > count) {
+    RythmoWidget *removed = m_tracks.takeLast();
+    m_layout->removeWidget(removed);
+    removed->deleteLater();
+  }
+
+  updateVisualStyles();
+}
+
+void RythmoOverlay::updateVisualStyles() {
+  for (RythmoWidget *track : m_tracks) {
+    track->setVisualStyle(RythmoWidget::Standalone);
+  }
+}
 
 // =============================================================================
 // Proxy Methods
 // =============================================================================
 
 void RythmoOverlay::sync(qint64 positionMs) {
-  m_rythmo1->sync(positionMs);
-  m_rythmo2->sync(positionMs);
+  for (RythmoWidget *track : m_tracks) {
+    track->sync(positionMs);
+  }
 }
 
 void RythmoOverlay::setPlaying(bool playing) {
-  m_rythmo1->setPlaying(playing);
-  m_rythmo2->setPlaying(playing);
+  for (RythmoWidget *track : m_tracks) {
+    track->setPlaying(playing);
+  }
 }
 
 void RythmoOverlay::setSpeed(int speed) {
-  m_rythmo1->setSpeed(speed);
-  m_rythmo2->setSpeed(speed);
+  for (RythmoWidget *track : m_tracks) {
+    track->setSpeed(speed);
+  }
 }
 
 void RythmoOverlay::setEditable(bool editable) {
-  m_rythmo1->setEditable(editable);
-  m_rythmo2->setEditable(editable);
+  for (RythmoWidget *track : m_tracks) {
+    track->setEditable(editable);
+  }
 }
 
 // =============================================================================

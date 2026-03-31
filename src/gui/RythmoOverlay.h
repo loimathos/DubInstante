@@ -2,7 +2,7 @@
  * @file RythmoOverlay.h
  * @brief Container widget for multiple RythmoWidget tracks.
  *
- * This widget manages the display of one or two Rythmo tracks,
+ * This widget manages the display of one or more Rythmo tracks,
  * positioned as overlays on the video display area.
  *
  * @note Part of the GUI layer - pure layout and forwarding.
@@ -14,6 +14,7 @@
 #include "RythmoWidget.h"
 
 #include <QVBoxLayout>
+#include <QVector>
 #include <QWidget>
 
 /**
@@ -21,7 +22,7 @@
  * @brief Container for multiple RythmoWidget tracks.
  *
  * Features:
- * - Manages Track 1 and optional Track 2
+ * - Manages 1 to MAX_TRACKS RythmoWidget instances
  * - Provides proxy methods for convenience
  * - Handles layout and visibility of tracks
  */
@@ -32,45 +33,45 @@ public:
   explicit RythmoOverlay(QWidget *parent = nullptr);
   ~RythmoOverlay() override = default;
 
+  static constexpr int MAX_TRACKS = 4;
+
   // =========================================================================
   // Track Access
   // =========================================================================
 
-  /** @brief Returns pointer to Track 1 widget. */
-  RythmoWidget *track1() const;
+  /** @brief Returns pointer to track widget at given index, or nullptr. */
+  RythmoWidget *track(int index) const;
 
-  /** @brief Returns pointer to Track 2 widget. */
-  RythmoWidget *track2() const;
+  /** @brief Returns the current number of tracks. */
+  int trackCount() const;
 
-  /** @brief Shows or hides Track 2. */
-  void setTrack2Visible(bool visible);
-
-  /** @brief Returns whether Track 2 is visible. */
-  bool isTrack2Visible() const;
+  /** @brief Sets the number of visible tracks (1 to MAX_TRACKS). */
+  void setTrackCount(int count);
 
 public slots:
   // =========================================================================
-  // Proxy Methods (forward to both tracks)
+  // Proxy Methods (forward to all tracks)
   // =========================================================================
 
-  /** @brief Syncs both tracks to the given position. */
+  /** @brief Syncs all tracks to the given position. */
   void sync(qint64 positionMs);
 
-  /** @brief Sets playing state for both tracks. */
+  /** @brief Sets playing state for all tracks. */
   void setPlaying(bool playing);
 
-  /** @brief Sets scrolling speed for both tracks. */
+  /** @brief Sets scrolling speed for all tracks. */
   void setSpeed(int speed);
 
-  /** @brief Enable/disable text editing on both tracks. */
+  /** @brief Enable/disable text editing on all tracks. */
   void setEditable(bool editable);
 
 protected:
   void paintEvent(QPaintEvent *event) override;
 
 private:
-  RythmoWidget *m_rythmo1;
-  RythmoWidget *m_rythmo2;
+  void updateVisualStyles();
+
+  QVector<RythmoWidget *> m_tracks;
   QVBoxLayout *m_layout;
 };
 

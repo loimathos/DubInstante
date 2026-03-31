@@ -2,12 +2,13 @@
 #define TRACKSETTINGSDIALOG_H
 
 #include "../core/RythmoManager.h"
-#include <QButtonGroup> // Added this include for QButtonGroup
+#include <QButtonGroup>
 #include <QComboBox>
 #include <QDialog>
 #include <QFontComboBox>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QVector>
 
 class RythmoManager;
 class RythmoWidget;
@@ -16,7 +17,7 @@ class TrackSettingsDialog : public QDialog {
   Q_OBJECT
 
 public:
-  explicit TrackSettingsDialog(RythmoManager *rythmoManager,
+  explicit TrackSettingsDialog(RythmoManager *rythmoManager, int trackCount,
                                QWidget *parent = nullptr);
   ~TrackSettingsDialog() override = default;
 
@@ -40,11 +41,11 @@ private:
 
   RythmoManager *m_rythmoManager;
   int m_currentTrackIndex;
+  int m_trackCount;
 
   // UI Elements
   QButtonGroup *m_trackGroup;
-  QPushButton *m_btnTrack1;
-  QPushButton *m_btnTrack2;
+  QVector<QPushButton *> m_trackButtons;
 
   // Fine controls
   QFontComboBox *m_fontComboBox;

@@ -25,13 +25,19 @@ bool SaveManager::save(const QString &filePath, const SaveData &data) {
   QJsonObject root;
   root["video_url"] = cleanData.videoUrl;
   root["video_volume"] = cleanData.videoVolume;
-  root["audio_input_1"] = cleanData.audioInput1;
-  root["audio_gain_1"] = cleanData.audioGain1;
-  root["audio_input_2"] = cleanData.audioInput2;
-  root["audio_gain_2"] = cleanData.audioGain2;
-  root["enable_track_2"] = cleanData.enableTrack2;
+  root["track_count"] = cleanData.trackCount;
   root["scroll_speed"] = cleanData.scrollSpeed;
   root["is_text_white"] = cleanData.isTextWhite;
+
+  // Save audio tracks
+  QJsonArray audioTracksArray;
+  for (const auto &audioTrack : cleanData.audioTracks) {
+    QJsonObject audioObj;
+    audioObj["audio_input"] = audioTrack.audioInput;
+    audioObj["audio_gain"] = audioTrack.audioGain;
+    audioTracksArray.append(audioObj);
+  }
+  root["audio_tracks"] = audioTracksArray;
 
   QJsonArray tracksArray;
   for (const auto &trackData : cleanData.tracks) {
@@ -272,14 +278,22 @@ bool SaveManager::load(const QString &filePath, SaveData &data) {
   // Robust loading with fallbacks
   data.videoUrl = root.value("video_url").toString("");
   data.videoVolume = (float)root.value("video_volume").toDouble(1.0);
-  data.audioInput1 = root.value("audio_input_1").toString("");
-  data.audioGain1 = (float)root.value("audio_gain_1").toDouble(1.0);
-  data.audioInput2 = root.value("audio_input_2").toString("");
-  data.audioGain2 = (float)root.value("audio_gain_2").toDouble(1.0);
-  data.enableTrack2 = root.value("enable_track_2").toBool(false);
+  data.trackCount = root.value("track_count").toInt(1);
   data.scrollSpeed = root.value("scroll_speed").toInt(100);
   data.isTextWhite = root.value("is_text_white").toBool(true);
 
+  // Load audio tracks
+  data.audioTracks.clear();
+  QJsonArray audioTracksArray = root.value("audio_tracks").toArray();
+  for (const auto &val : audioTracksArray) {
+    TrackAudioSaveData audioData;
+    QJsonObject audioObj = val.toObject();
+    audioData.audioInput = audioObj.value("audio_input").toString("");
+    audioData.audioGain = (float)audioObj.value("audio_gain").toDouble(1.0);
+    data.audioTracks.append(audioData);
+  }
+
+  // Load rythmo tracks
   QJsonArray tracksArray = root.value("tracks").toArray();
   data.tracks.clear();
   for (const auto &val : tracksArray) {
@@ -322,14 +336,13 @@ bool SaveManager::load(const QString &filePath, SaveData &data) {
 SaveData SaveManager::sanitize(const SaveData &data) {
   SaveData clean = data;
   clean.videoVolume = qBound(0.0f, clean.videoVolume, 1.0f);
-  clean.audioGain1 = qBound(0.0f, clean.audioGain1, 1.0f);
-  clean.audioGain2 = qBound(0.0f, clean.audioGain2, 1.0f);
+  clean.trackCount = qBound(1, clean.trackCount, 4);
   clean.scrollSpeed = qBound(10, clean.scrollSpeed, 500);
 
-  // We do NOT trim tracks, as whitespace is timing!
-  // for (int i = 0; i < clean.tracks.size(); ++i) {
-  //   clean.tracks[i].text = clean.tracks[i].text.trimmed();
-  // }
+  for (int i = 0; i < clean.audioTracks.size(); ++i) {
+    clean.audioTracks[i].audioGain =
+        qBound(0.0f, clean.audioTracks[i].audioGain, 1.0f);
+  }
 
   return clean;
 }

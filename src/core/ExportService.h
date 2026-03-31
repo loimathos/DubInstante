@@ -16,6 +16,7 @@
 #include <QObject>
 #include <QProcess>
 #include <QString>
+#include <QStringList>
 
 /**
  * @struct ExportConfig
@@ -24,13 +25,13 @@
  * Contains all parameters needed to perform a video/audio merge.
  */
 struct ExportConfig {
-    QString videoPath;          ///< Absolute path to source video
-    QString audioPath;          ///< Absolute path to primary recorded audio
-    QString secondAudioPath;    ///< Optional: path to second audio track
-    QString outputPath;         ///< Absolute path for output file
-    qint64 durationMs;          ///< Recording duration in milliseconds (-1 for full)
-    qint64 startTimeMs;         ///< Start time offset in milliseconds
-    float originalVolume;       ///< Volume of original video audio (0.0 to 1.0)
+    QString videoPath;              ///< Absolute path to source video
+    QString audioPath;              ///< Absolute path to primary recorded audio
+    QStringList extraAudioPaths;    ///< Optional: paths to additional audio tracks
+    QString outputPath;             ///< Absolute path for output file
+    qint64 durationMs;              ///< Recording duration in milliseconds (-1 for full)
+    qint64 startTimeMs;             ///< Start time offset in milliseconds
+    float originalVolume;           ///< Volume of original video audio (0.0 to 1.0)
     
     ExportConfig()
         : durationMs(-1)

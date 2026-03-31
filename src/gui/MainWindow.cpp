@@ -44,13 +44,11 @@ MainWindow::MainWindow(QWidget *parent)
       ,
       m_playbackEngine(new PlaybackEngine(this)),
       m_rythmoManager(new RythmoManager(this)),
-      m_audioRecorder1(new AudioRecorder(this)),
-      m_audioRecorder2(new AudioRecorder(this)),
       m_exportService(new ExportService(this)),
       m_saveManager(new SaveManager(this))
       // Initialize state
       ,
-      m_previousVolume(100), m_isRecording(false),
+      m_trackCount(0), m_previousVolume(100), m_isRecording(false),
       m_isFullscreenRecording(false), m_lastRecordedDurationMs(0),
       m_recordingStartTimeMs(0) {
   loadStylesheet();
@@ -62,11 +60,8 @@ MainWindow::MainWindow(QWidget *parent)
   // Connect video sink
   m_playbackEngine->setVideoSink(m_videoWidget->videoSink());
 
-  // Setup temporary file paths
-  QString tempDir =
-      QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-  m_tempAudioPath1 = tempDir + "/temp_dub.wav";
-  m_tempAudioPath2 = tempDir + "/temp_dub_2.wav";
+  // Create initial track (always start with 1)
+  setTrackCount(1);
 
   // Window configuration
   setWindowTitle("DubInstante - Studio");
@@ -197,23 +192,11 @@ void MainWindow::setupUi() {
 
   QHBoxLayout *bottomControlsLayout = new QHBoxLayout();
 
-  // Tracks column
-  QVBoxLayout *tracksLayout = new QVBoxLayout();
-  tracksLayout->setSpacing(5);
+  // Tracks column (dynamic)
+  m_tracksLayout = new QVBoxLayout();
+  m_tracksLayout->setSpacing(5);
 
-  m_track1Panel = new TrackPanel("Piste 1", m_audioRecorder1, this);
-  tracksLayout->addWidget(m_track1Panel);
-
-  m_track2Container = new QWidget(this);
-  QHBoxLayout *track2ContainerLayout = new QHBoxLayout(m_track2Container);
-  track2ContainerLayout->setContentsMargins(0, 0, 0, 0);
-  m_track2Panel =
-      new TrackPanel("Piste 2", m_audioRecorder2, m_track2Container);
-  track2ContainerLayout->addWidget(m_track2Panel);
-  m_track2Container->setVisible(false);
-  tracksLayout->addWidget(m_track2Container);
-
-  bottomControlsLayout->addLayout(tracksLayout);
+  bottomControlsLayout->addLayout(m_tracksLayout);
   bottomControlsLayout->addStretch();
 
   // Speed controls column
@@ -246,9 +229,6 @@ void MainWindow::setupUi() {
   // Initial sync
   m_rythmoOverlay->setSpeed(m_speedSpinBox->value());
   m_rythmoManager->setSpeed(m_speedSpinBox->value());
-  m_rythmoManager->setText(0, ""); // Initialize track 1
-  m_rythmoManager->setText(
-      1, "TRACK 2: Ready for dubbing..."); // Initialize track 2
 }
 
 void MainWindow::createMenus() {
@@ -293,13 +273,44 @@ void MainWindow::createMenus() {
   // === Bande Rythmo Menu ===
   QMenu *rythmoMenu = menuBar->addMenu(tr("Bande Rythmo"));
 
-  m_actionEnableTrack2 = new QAction(tr("Activer 2e piste"), this);
-  m_actionEnableTrack2->setCheckable(true);
-  connect(m_actionEnableTrack2, &QAction::toggled, this, [this](bool checked) {
-    m_track2Container->setVisible(checked);
-    m_rythmoOverlay->setTrack2Visible(checked);
+  // Track count selector: [ - ] N bande(s) rythmo [ + ]
+  QWidget *trackCountWidget = new QWidget(this);
+  QHBoxLayout *trackCountLayout = new QHBoxLayout(trackCountWidget);
+  trackCountLayout->setContentsMargins(8, 4, 8, 4);
+  trackCountLayout->setSpacing(6);
+
+  QPushButton *btnMinus = new QPushButton("−", trackCountWidget);
+  btnMinus->setFixedSize(28, 28);
+  btnMinus->setCursor(Qt::PointingHandCursor);
+  trackCountLayout->addWidget(btnMinus);
+
+  m_trackCountLabel = new QLabel("1 bande rythmo", trackCountWidget);
+  m_trackCountLabel->setAlignment(Qt::AlignCenter);
+  m_trackCountLabel->setMinimumWidth(120);
+  trackCountLayout->addWidget(m_trackCountLabel);
+
+  QPushButton *btnPlus = new QPushButton("+", trackCountWidget);
+  btnPlus->setFixedSize(28, 28);
+  btnPlus->setCursor(Qt::PointingHandCursor);
+  trackCountLayout->addWidget(btnPlus);
+
+  connect(btnMinus, &QPushButton::clicked, this, [this]() {
+    if (!m_isRecording) {
+      setTrackCount(m_trackCount - 1);
+    }
   });
-  rythmoMenu->addAction(m_actionEnableTrack2);
+
+  connect(btnPlus, &QPushButton::clicked, this, [this]() {
+    if (!m_isRecording) {
+      setTrackCount(m_trackCount + 1);
+    }
+  });
+
+  QWidgetAction *trackCountAction = new QWidgetAction(this);
+  trackCountAction->setDefaultWidget(trackCountWidget);
+  rythmoMenu->addAction(trackCountAction);
+
+  rythmoMenu->addSeparator();
 
   m_actionPersonalizeRythmo = new QAction(tr("Personnaliser"), this);
   rythmoMenu->addAction(m_actionPersonalizeRythmo);
@@ -380,67 +391,6 @@ void MainWindow::setupConnections() {
           });
 
   // =========================================================================
-  // RythmoOverlay Interactions -> PlaybackEngine
-  // =========================================================================
-
-  connect(m_rythmoOverlay->track1(), &RythmoWidget::seekRequested,
-          m_playbackEngine, &PlaybackEngine::seek);
-  connect(m_rythmoOverlay->track2(), &RythmoWidget::seekRequested,
-          m_playbackEngine, &PlaybackEngine::seek);
-  connect(m_rythmoOverlay->track1(), &RythmoWidget::playRequested,
-          m_playbackEngine, &PlaybackEngine::play);
-  connect(m_rythmoOverlay->track2(), &RythmoWidget::playRequested,
-          m_playbackEngine, &PlaybackEngine::play);
-
-  // Text editing: RythmoWidget -> RythmoManager
-  connect(m_rythmoOverlay->track1(), &RythmoWidget::characterTyped, this,
-          [this](const QString &character) {
-            m_rythmoManager->insertCharacter(0, character);
-            m_rythmoOverlay->track1()->setText(m_rythmoManager->text(0));
-          });
-  connect(m_rythmoOverlay->track2(), &RythmoWidget::characterTyped, this,
-          [this](const QString &character) {
-            m_rythmoManager->insertCharacter(1, character);
-            m_rythmoOverlay->track2()->setText(m_rythmoManager->text(1));
-          });
-
-  connect(m_rythmoOverlay->track1(), &RythmoWidget::backspacePressed, this,
-          [this]() {
-            m_rythmoManager->deleteCharacter(0, true);
-            m_rythmoOverlay->track1()->setText(m_rythmoManager->text(0));
-          });
-  connect(m_rythmoOverlay->track2(), &RythmoWidget::backspacePressed, this,
-          [this]() {
-            m_rythmoManager->deleteCharacter(1, true);
-            m_rythmoOverlay->track2()->setText(m_rythmoManager->text(1));
-          });
-
-  connect(m_rythmoOverlay->track1(), &RythmoWidget::deletePressed, this,
-          [this]() {
-            m_rythmoManager->deleteCharacter(0, false);
-            m_rythmoOverlay->track1()->setText(m_rythmoManager->text(0));
-          });
-  connect(m_rythmoOverlay->track2(), &RythmoWidget::deletePressed, this,
-          [this]() {
-            m_rythmoManager->deleteCharacter(1, false);
-            m_rythmoOverlay->track2()->setText(m_rythmoManager->text(1));
-          });
-
-  // Navigation (frame stepping via RythmoWidget arrow keys)
-  qreal fps = m_playbackEngine->videoFrameRate();
-  int frameStep = (fps > 0) ? static_cast<int>(1000.0 / fps) : 40;
-  connect(m_rythmoOverlay->track1(), &RythmoWidget::navigationRequested, this,
-          [this, frameStep](bool forward) {
-            qint64 delta = forward ? frameStep : -frameStep;
-            m_playbackEngine->seek(m_playbackEngine->position() + delta);
-          });
-  connect(m_rythmoOverlay->track2(), &RythmoWidget::navigationRequested, this,
-          [this, frameStep](bool forward) {
-            qint64 delta = forward ? frameStep : -frameStep;
-            m_playbackEngine->seek(m_playbackEngine->position() + delta);
-          });
-
-  // =========================================================================
   // Position Slider
   // =========================================================================
 
@@ -518,7 +468,7 @@ void MainWindow::setupConnections() {
 
   connect(m_textColorCheck, &QCheckBox::toggled, this, [this](bool checked) {
     QColor color = checked ? QColor(Qt::white) : QColor(34, 34, 34);
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < m_trackCount; ++i) {
       RythmoTrackStyle style = m_rythmoManager->trackStyle(i);
       style.textColor = color;
       m_rythmoManager->setTrackStyle(i, style);
@@ -527,7 +477,7 @@ void MainWindow::setupConnections() {
 
   connect(m_actionPersonalizeRythmo, &QAction::triggered, this, [this]() {
     TrackSettingsDialog *dialog =
-        new TrackSettingsDialog(m_rythmoManager, this);
+        new TrackSettingsDialog(m_rythmoManager, m_trackCount, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
   });
@@ -536,30 +486,18 @@ void MainWindow::setupConnections() {
   // Recording
   // =========================================================================
 
-  // RythmoOverlay -> RythmoManager
-  // We need to sync text changes back to the manager
-  connect(m_rythmoOverlay->track1(), &RythmoWidget::textChanged, this,
-          [this](const QString &text) { m_rythmoManager->setText(0, text); });
-
-  connect(m_rythmoOverlay->track2(), &RythmoWidget::textChanged, this,
-          [this](const QString &text) { m_rythmoManager->setText(1, text); });
-
   // Update overlay styles when manager styles change
   connect(m_rythmoManager, &RythmoManager::trackStyleChanged, this,
           [this](int trackIndex, const RythmoTrackStyle &style) {
-            if (trackIndex == 0)
-              m_rythmoOverlay->track1()->setTrackStyle(style);
-            else if (trackIndex == 1)
-              m_rythmoOverlay->track2()->setTrackStyle(style);
+            RythmoWidget *w = m_rythmoOverlay->track(trackIndex);
+            if (w) {
+              w->setTrackStyle(style);
+            }
           });
 
   // Recording
   connect(m_recordButton, &QPushButton::clicked, this,
           &MainWindow::toggleRecording);
-  connect(m_audioRecorder1, &AudioRecorder::errorOccurred, this,
-          &MainWindow::onError);
-  connect(m_audioRecorder2, &AudioRecorder::errorOccurred, this,
-          &MainWindow::onError);
 
   // =========================================================================
   // Export
@@ -569,6 +507,135 @@ void MainWindow::setupConnections() {
           &MainWindow::onExportProgress);
   connect(m_exportService, &ExportService::exportFinished, this,
           &MainWindow::onExportFinished);
+}
+
+// =============================================================================
+// Dynamic Track Management
+// =============================================================================
+
+void MainWindow::setTrackCount(int count) {
+  count = qBound(1, count, MAX_TRACKS);
+  if (count == m_trackCount)
+    return;
+
+  QString tempDir =
+      QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+
+  // Add tracks if needed
+  while (m_trackCount < count) {
+    int idx = m_trackCount;
+
+    // Create AudioRecorder
+    AudioRecorder *recorder = new AudioRecorder(this);
+    m_audioRecorders.append(recorder);
+    connect(recorder, &AudioRecorder::errorOccurred, this,
+            &MainWindow::onError);
+
+    // Create TrackPanel
+    TrackPanel *panel = new TrackPanel(
+        QString("Piste %1").arg(idx + 1), recorder, this);
+    m_trackPanels.append(panel);
+    m_tracksLayout->addWidget(panel);
+
+    // Setup temp audio path
+    m_tempAudioPaths.append(
+        tempDir + QString("/temp_dub_%1.wav").arg(idx + 1));
+
+    // Initialize RythmoManager text for this track
+    m_rythmoManager->setText(idx, "");
+
+    m_trackCount++;
+  }
+
+  // Remove tracks if needed
+  while (m_trackCount > count) {
+    int idx = m_trackCount - 1;
+
+    // Remove TrackPanel
+    TrackPanel *panel = m_trackPanels.takeLast();
+    m_tracksLayout->removeWidget(panel);
+    panel->deleteLater();
+
+    // Remove AudioRecorder
+    AudioRecorder *recorder = m_audioRecorders.takeLast();
+    recorder->deleteLater();
+
+    // Remove temp path
+    m_tempAudioPaths.removeLast();
+
+    m_trackCount--;
+  }
+
+  // Update RythmoOverlay
+  m_rythmoOverlay->setTrackCount(count);
+
+  // Connect signals for all current tracks
+  // (reconnecting is safe because we use lambdas with captured index)
+  for (int i = 0; i < m_trackCount; ++i) {
+    connectTrack(i);
+  }
+
+  // Update label
+  if (m_trackCountLabel) {
+    m_trackCountLabel->setText(
+        QString("%1 bande%2 rythmo")
+            .arg(m_trackCount)
+            .arg(m_trackCount > 1 ? "s" : ""));
+  }
+}
+
+void MainWindow::connectTrack(int index) {
+  RythmoWidget *widget = m_rythmoOverlay->track(index);
+  if (!widget)
+    return;
+
+  // Disconnect any existing connections on this widget to prevent duplicates
+  disconnect(widget, nullptr, this, nullptr);
+  disconnect(widget, nullptr, m_playbackEngine, nullptr);
+
+  // Seek and play
+  connect(widget, &RythmoWidget::seekRequested, m_playbackEngine,
+          &PlaybackEngine::seek);
+  connect(widget, &RythmoWidget::playRequested, m_playbackEngine,
+          &PlaybackEngine::play);
+
+  // Text editing: RythmoWidget -> RythmoManager
+  connect(widget, &RythmoWidget::characterTyped, this,
+          [this, index](const QString &character) {
+            m_rythmoManager->insertCharacter(index, character);
+            RythmoWidget *w = m_rythmoOverlay->track(index);
+            if (w)
+              w->setText(m_rythmoManager->text(index));
+          });
+
+  connect(widget, &RythmoWidget::backspacePressed, this, [this, index]() {
+    m_rythmoManager->deleteCharacter(index, true);
+    RythmoWidget *w = m_rythmoOverlay->track(index);
+    if (w)
+      w->setText(m_rythmoManager->text(index));
+  });
+
+  connect(widget, &RythmoWidget::deletePressed, this, [this, index]() {
+    m_rythmoManager->deleteCharacter(index, false);
+    RythmoWidget *w = m_rythmoOverlay->track(index);
+    if (w)
+      w->setText(m_rythmoManager->text(index));
+  });
+
+  // Navigation (frame stepping via RythmoWidget arrow keys)
+  qreal fps = m_playbackEngine->videoFrameRate();
+  int frameStep = (fps > 0) ? static_cast<int>(1000.0 / fps) : 40;
+  connect(widget, &RythmoWidget::navigationRequested, this,
+          [this, frameStep](bool forward) {
+            qint64 delta = forward ? frameStep : -frameStep;
+            m_playbackEngine->seek(m_playbackEngine->position() + delta);
+          });
+
+  // Text changed: RythmoWidget -> RythmoManager
+  connect(widget, &RythmoWidget::textChanged, this,
+          [this, index](const QString &text) {
+            m_rythmoManager->setText(index, text);
+          });
 }
 
 // =============================================================================
@@ -614,23 +681,25 @@ void MainWindow::onSaveProject() {
   SaveData data;
   data.videoUrl = property("currentVideoPath").toString();
   data.videoVolume = m_playbackEngine->volume();
-  data.audioInput1 = m_track1Panel->selectedDevice().description();
-  data.audioGain1 = m_track1Panel->gain();
-  data.audioInput2 = m_track2Panel->selectedDevice().description();
-  data.audioGain2 = m_track2Panel->gain();
+  data.trackCount = m_trackCount;
   data.scrollSpeed = m_speedSpinBox->value();
   data.isTextWhite = m_textColorCheck->isChecked();
-  data.enableTrack2 = m_actionEnableTrack2->isChecked();
 
-  TrackSaveData track1Data;
-  track1Data.text = m_rythmoManager->text(0);
-  track1Data.style = m_rythmoManager->trackStyle(0);
+  // Save audio tracks
+  for (int i = 0; i < m_trackCount; ++i) {
+    TrackAudioSaveData audioData;
+    audioData.audioInput = m_trackPanels[i]->selectedDevice().description();
+    audioData.audioGain = m_trackPanels[i]->gain();
+    data.audioTracks.append(audioData);
+  }
 
-  TrackSaveData track2Data;
-  track2Data.text = m_rythmoManager->text(1);
-  track2Data.style = m_rythmoManager->trackStyle(1);
-
-  data.tracks << track1Data << track2Data;
+  // Save rythmo tracks
+  for (int i = 0; i < m_trackCount; ++i) {
+    TrackSaveData trackData;
+    trackData.text = m_rythmoManager->text(i);
+    trackData.style = m_rythmoManager->trackStyle(i);
+    data.tracks.append(trackData);
+  }
 
   if (saveWithVideo) {
     // Check zip availability BEFORE launching thread (for specific error
@@ -704,18 +773,18 @@ void MainWindow::onLoadProject() {
   // Apply loaded data
   m_speedSpinBox->setValue(data.scrollSpeed);
   m_textColorCheck->setChecked(data.isTextWhite);
-  m_actionEnableTrack2->setChecked(data.enableTrack2);
 
-  // Restore tracks
-  if (data.tracks.size() > 0) {
-    m_rythmoManager->setText(0, data.tracks[0].text);
-    m_rythmoManager->setTrackStyle(0, data.tracks[0].style);
-    m_rythmoOverlay->track1()->setText(data.tracks[0].text);
-  }
-  if (data.tracks.size() > 1) {
-    m_rythmoManager->setText(1, data.tracks[1].text);
-    m_rythmoManager->setTrackStyle(1, data.tracks[1].style);
-    m_rythmoOverlay->track2()->setText(data.tracks[1].text);
+  // Set track count
+  int loadedTrackCount = qBound(1, data.trackCount, MAX_TRACKS);
+  setTrackCount(loadedTrackCount);
+
+  // Restore rythmo tracks
+  for (int i = 0; i < qMin(data.tracks.size(), m_trackCount); ++i) {
+    m_rythmoManager->setText(i, data.tracks[i].text);
+    m_rythmoManager->setTrackStyle(i, data.tracks[i].style);
+    RythmoWidget *w = m_rythmoOverlay->track(i);
+    if (w)
+      w->setText(data.tracks[i].text);
   }
 
   // Restore video and volume
@@ -738,23 +807,16 @@ void MainWindow::onLoadProject() {
 
   m_playbackEngine->setVolume(data.videoVolume);
 
-  // Note: Audio device selection by name is best-effort
-  // Fallback: if device not found, remain on current/default
-  for (const auto &dev : m_audioRecorder1->availableDevices()) {
-    if (dev.description() == data.audioInput1) {
-      m_track1Panel->setDevice(dev);
-      break;
+  // Restore audio device selection and gain
+  for (int i = 0; i < qMin(data.audioTracks.size(), m_trackCount); ++i) {
+    for (const auto &dev : m_audioRecorders[i]->availableDevices()) {
+      if (dev.description() == data.audioTracks[i].audioInput) {
+        m_trackPanels[i]->setDevice(dev);
+        break;
+      }
     }
+    m_trackPanels[i]->setVolume(data.audioTracks[i].audioGain);
   }
-  m_track1Panel->setVolume(data.audioGain1);
-
-  for (const auto &dev : m_audioRecorder2->availableDevices()) {
-    if (dev.description() == data.audioInput2) {
-      m_track2Panel->setDevice(dev);
-      break;
-    }
-  }
-  m_track2Panel->setVolume(data.audioGain2);
 
   statusBar()->showMessage(tr("Projet chargé"), 3000);
 }
@@ -801,10 +863,10 @@ void MainWindow::toggleRecording() {
     m_playbackEngine->seek(0);
     m_recordingStartTimeMs = m_playbackEngine->position();
 
-    m_track1Panel->startRecording(QUrl::fromLocalFile(m_tempAudioPath1));
-
-    if (m_actionEnableTrack2->isChecked()) {
-      m_track2Panel->startRecording(QUrl::fromLocalFile(m_tempAudioPath2));
+    // Start recording on all tracks
+    for (int i = 0; i < m_trackCount; ++i) {
+      m_trackPanels[i]->startRecording(
+          QUrl::fromLocalFile(m_tempAudioPaths[i]));
     }
 
     // Enter fullscreen if action is checked
@@ -822,14 +884,13 @@ void MainWindow::toggleRecording() {
     m_recordButton->setText("STOP");
     m_exportProgressBar->setVisible(false);
     m_actionOpenMp4->setEnabled(false);
-    m_actionEnableTrack2->setEnabled(false);
 
   } else {
     m_playbackEngine->pause();
-    m_track1Panel->stopRecording();
 
-    if (m_actionEnableTrack2->isChecked()) {
-      m_track2Panel->stopRecording();
+    // Stop recording on all tracks
+    for (int i = 0; i < m_trackCount; ++i) {
+      m_trackPanels[i]->stopRecording();
     }
 
     // Exit fullscreen if active
@@ -846,7 +907,6 @@ void MainWindow::toggleRecording() {
     m_recordButton->setChecked(false);
     m_recordButton->setText("REC");
     m_actionOpenMp4->setEnabled(true);
-    m_actionEnableTrack2->setEnabled(true);
 
     // Prompt for save location
     QString currentVideo = property("currentVideoPath").toString();
@@ -860,14 +920,15 @@ void MainWindow::toggleRecording() {
 
       ExportConfig config;
       config.videoPath = currentVideo;
-      config.audioPath = m_tempAudioPath1;
+      config.audioPath = m_tempAudioPaths[0]; // Primary track
       config.outputPath = outputFile;
       config.durationMs = m_lastRecordedDurationMs;
       config.startTimeMs = m_recordingStartTimeMs;
       config.originalVolume = m_playbackEngine->volume();
 
-      if (m_actionEnableTrack2->isChecked()) {
-        config.secondAudioPath = m_tempAudioPath2;
+      // Add extra audio tracks (index 1+)
+      for (int i = 1; i < m_trackCount; ++i) {
+        config.extraAudioPaths.append(m_tempAudioPaths[i]);
       }
 
       m_exportService->startExport(config);
@@ -895,11 +956,12 @@ void MainWindow::enterFullscreenRecording() {
   m_rythmoOverlay->raise();
   m_videoWidget->show();
 
-  m_fullscreenContainer->showFullScreen();
   m_isFullscreenRecording = true;
 
   // Install event filter on fullscreen container for resize sync
   m_fullscreenContainer->installEventFilter(this);
+
+  m_fullscreenContainer->showFullScreen();
 }
 
 void MainWindow::exitFullscreenRecording() {

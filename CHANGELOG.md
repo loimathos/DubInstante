@@ -5,6 +5,23 @@ All notable changes to **DubInstante** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-03-31
+
+### Fixed
+- **Fullscreen Recording Alignment**: Fixed a bug where the Rythmo bands stayed stuck in the middle of the screen when entering fullscreen recording. They now correctly automatically stick to the bottom.
+- **Track Separation Consistency**: Fixed the visual styling of tracks 3 and 4 so they are properly separated with consistent spacing and headers natively like tracks 1 and 2, instead of being joined together.
+
+## [0.10.0] - 2026-03-19
+
+### Added
+- **Dynamic Multi-Band Support**: Replaced the hard-coded 2-track system with dynamic support for up to 4 simultaneous Rythmo bands.
+- **Track Selection UI**: Replaced the "Activer 2e piste" toggle with a dynamic `[ - ] N bande(s) rythmo [ + ]` counter inside the "Bande Rythmo" menu.
+
+### Changed
+- **Save Architecture Core**: Dropped outdated save format backward compatibility to replace hardcoded track fields with dynamic arrays representing N tracks' metadata and styles.
+- **N-Channel Audio Export**: Vastly enhanced the FFmpeg `amix` command in `ExportService` to dynamically iterate through and merge N active audio channels alongside the main video track.
+- **Settings Delegation**: `TrackSettingsDialog` and `RythmoOverlay` dynamically render and style up to 4 elements instantly.
+
 ## [0.9.0] - 2026-03-04
 
 ### Added

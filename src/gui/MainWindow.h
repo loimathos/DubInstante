@@ -24,6 +24,7 @@
 #include <QPushButton>
 #include <QShortcut>
 #include <QSpinBox>
+#include <QVector>
 
 #include <QAction>
 #include <QLineEdit>
@@ -43,6 +44,7 @@ class VideoWidget;
 class RythmoOverlay;
 class TrackPanel;
 class ClickableSlider;
+class QVBoxLayout;
 
 // Forward declaration - Utils
 struct ExportConfig;
@@ -66,6 +68,8 @@ class MainWindow : public QMainWindow {
 public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow() override = default;
+
+  static constexpr int MAX_TRACKS = 4;
 
 protected:
   bool eventFilter(QObject *watched, QEvent *event) override;
@@ -103,14 +107,17 @@ private:
   void exitFullscreenRecording();
   void showShortcutsPopup();
 
+  // Dynamic track management
+  void setTrackCount(int count);
+  void connectTrack(int index);
+
   // =========================================================================
   // Core Services (Business Logic)
   // =========================================================================
 
   PlaybackEngine *m_playbackEngine;
   RythmoManager *m_rythmoManager;
-  AudioRecorder *m_audioRecorder1;
-  AudioRecorder *m_audioRecorder2;
+  QVector<AudioRecorder *> m_audioRecorders;
   ExportService *m_exportService;
   SaveManager *m_saveManager;
 
@@ -120,8 +127,8 @@ private:
 
   VideoWidget *m_videoWidget;
   RythmoOverlay *m_rythmoOverlay;
-  TrackPanel *m_track1Panel;
-  TrackPanel *m_track2Panel;
+  QVector<TrackPanel *> m_trackPanels;
+  QVBoxLayout *m_tracksLayout;
 
   // Playback controls
   QPushButton *m_playPauseButton;
@@ -140,8 +147,8 @@ private:
   QCheckBox *m_textColorCheck;
   QProgressBar *m_exportProgressBar;
 
-  // Track 2 controls
-  QWidget *m_track2Container;
+  // Track count controls
+  QLabel *m_trackCountLabel;
 
   // Fullscreen recording
   QFrame *m_videoFrame;
@@ -154,7 +161,6 @@ private:
   QAction *m_actionSaveProject;
 
   QAction *m_actionExpertMode;
-  QAction *m_actionEnableTrack2;
   QAction *m_actionFullscreen;
   QAction *m_actionShortcuts;
   QAction *m_actionGlobalSettings;
@@ -166,11 +172,11 @@ private:
   // State
   // =========================================================================
 
+  int m_trackCount;
   int m_previousVolume;
   bool m_isRecording;
   bool m_isFullscreenRecording;
-  QString m_tempAudioPath1;
-  QString m_tempAudioPath2;
+  QStringList m_tempAudioPaths;
   QElapsedTimer m_recordingTimer;
   qint64 m_lastRecordedDurationMs;
   qint64 m_recordingStartTimeMs;

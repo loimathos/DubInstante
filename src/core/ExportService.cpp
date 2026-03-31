@@ -149,9 +149,11 @@ bool ExportService::validateConfig(const ExportConfig &config, QString &errorMes
         return false;
     }
     
-    if (!config.secondAudioPath.isEmpty() && !QFile::exists(config.secondAudioPath)) {
-        errorMessage = "Erreur: L'enregistrement de la Piste 2 est introuvable.";
-        return false;
+    for (int i = 0; i < config.extraAudioPaths.size(); ++i) {
+        if (!config.extraAudioPaths[i].isEmpty() && !QFile::exists(config.extraAudioPaths[i])) {
+            errorMessage = QString("Erreur: L'enregistrement de la Piste %1 est introuvable.").arg(i + 2);
+            return false;
+        }
     }
     
     if (config.outputPath.isEmpty()) {
@@ -179,9 +181,17 @@ QStringList ExportService::buildFFmpegArgs(const ExportConfig &config) const
     args << "-i" << config.videoPath;   // [0]
     args << "-i" << config.audioPath;   // [1]
     
-    bool hasSecondTrack = !config.secondAudioPath.isEmpty();
-    if (hasSecondTrack) {
-        args << "-i" << config.secondAudioPath;  // [2]
+    // Add extra audio tracks: [2], [3], ...
+    for (const QString &extraPath : config.extraAudioPaths) {
+        if (!extraPath.isEmpty()) {
+            args << "-i" << extraPath;
+        }
+    }
+    
+    // Count total extra tracks actually added
+    int extraCount = 0;
+    for (const QString &extraPath : config.extraAudioPaths) {
+        if (!extraPath.isEmpty()) extraCount++;
     }
     
     // Video encoding: High quality H.264
@@ -198,19 +208,23 @@ QStringList ExportService::buildFFmpegArgs(const ExportConfig &config) const
         filterComplex += QString("[0:a]volume=%1[a0];").arg(config.originalVolume);
     }
     
+    // Primary track
     filterComplex += "[1:a]volume=1.0[a1];";
     
-    if (hasSecondTrack) {
-        filterComplex += "[2:a]volume=1.0[a2];";
+    // Extra tracks: input indices start at 2
+    for (int i = 0; i < extraCount; ++i) {
+        filterComplex += QString("[%1:a]volume=1.0[a%2];").arg(i + 2).arg(i + 2);
     }
     
     // AMIX: combine all audio streams
     QString inputsStr;
     if (includeOriginal) inputsStr += "[a0]";
     inputsStr += "[a1]";
-    if (hasSecondTrack) inputsStr += "[a2]";
+    for (int i = 0; i < extraCount; ++i) {
+        inputsStr += QString("[a%1]").arg(i + 2);
+    }
     
-    int amixInputs = (includeOriginal ? 1 : 0) + 1 + (hasSecondTrack ? 1 : 0);
+    int amixInputs = (includeOriginal ? 1 : 0) + 1 + extraCount;
     filterComplex += inputsStr + QString("amix=inputs=%1:duration=longest[aout]").arg(amixInputs);
     
     args << "-filter_complex" << filterComplex;
