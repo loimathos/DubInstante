@@ -36,6 +36,9 @@
 
 ## License / Licence
 
+This project is licensed under the **European Union Public Licence v. 1.2 (EUPL-1.2)** - see the [LICENSE](LICENSE) file for details.
+Ce projet est sous licence **European Union Public Licence v. 1.2 (EUPL-1.2)** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
 Open-source - Contributions welcome! / Contributions bienvenues!
 
 ---
