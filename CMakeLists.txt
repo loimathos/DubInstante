@@ -31,8 +31,27 @@ find_package(Qt6 REQUIRED COMPONENTS
 # FFmpeg Dependencies
 # =============================================================================
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil libswscale)
+find_package(PkgConfig QUIET)
+if(PKG_CONFIG_FOUND AND NOT WIN32)
+    pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil libswscale)
+else()
+    # On Windows or if pkg-config is not available
+    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+    find_library(AVCODEC_LIBRARY avcodec)
+    find_library(AVFORMAT_LIBRARY avformat)
+    find_library(AVUTIL_LIBRARY avutil)
+    find_library(SWSCALE_LIBRARY swscale)
+    
+    if (NOT AVCODEC_INCLUDE_DIR OR NOT AVCODEC_LIBRARY)
+        message(FATAL_ERROR "FFmpeg libraries not found. Please set CMAKE_PREFIX_PATH.")
+    endif()
+
+    add_library(PkgConfig::FFMPEG INTERFACE IMPORTED)
+    set_target_properties(PkgConfig::FFMPEG PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${AVCODEC_INCLUDE_DIR}"
+        INTERFACE_LINK_LIBRARIES "${AVCODEC_LIBRARY};${AVFORMAT_LIBRARY};${AVUTIL_LIBRARY};${SWSCALE_LIBRARY}"
+    )
+endif()
 
 # =============================================================================
 # Source Files by Layer

@@ -41,6 +41,14 @@ DubInstante
 build_release/
 dist_appimage/
 tools/
+squashfs-root/
+*.dmg
+ffmpeg.zip
+ffmpeg-bin/
+
+# Debugging and tests
+*_ldd.txt
+
 
 # Temporary files
 *.tmp

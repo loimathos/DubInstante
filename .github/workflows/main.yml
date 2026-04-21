@@ -17,7 +17,16 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y qt6-multimedia-dev libqt6opengl6-dev ffmpeg wget libfuse2 libgl1-mesa-dev
+        sudo apt install -y build-essential cmake wget libfuse2 libgl1-mesa-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libasound2-dev libpulse-dev
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.3'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        modules: 'qtmultimedia'
 
     - name: Build and Package AppImage
       run: |
@@ -54,11 +63,17 @@ jobs:
     - name: Set up MSVC
       uses: ilammy/msvc-dev-cmd@v1
 
+    - name: Download FFmpeg
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" -OutFile ffmpeg.zip
+        Expand-Archive ffmpeg.zip -DestinationPath C:\ffmpeg
+        Rename-Item -Path "C:\ffmpeg\ffmpeg-master-latest-win64-gpl-shared" -NewName "ffmpeg-bin"
+
     - name: Configure CMake
       run: |
         mkdir build
         cd build
-        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.5.3/msvc2019_64"
+        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.5.3/msvc2019_64;C:/ffmpeg/ffmpeg-bin"
 
     - name: Build
       run: |
@@ -69,6 +84,7 @@ jobs:
       run: |
         mkdir dist
         copy build\Release\DubInstante.exe dist\
+        copy C:\ffmpeg\ffmpeg-bin\bin\*.dll dist\
         windeployqt --release --no-translations --compiler-runtime --multimedia dist\DubInstante.exe
 
     - name: Get Version
@@ -90,6 +106,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: brew install ffmpeg pkg-config
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3

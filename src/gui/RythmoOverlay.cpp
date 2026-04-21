@@ -46,6 +46,9 @@ void RythmoOverlay::setTrackCount(int count) {
   // Add tracks if needed
   while (m_tracks.size() < count) {
     RythmoWidget *newTrack = new RythmoWidget(this);
+    newTrack->setSpeed(m_currentSpeed);
+    newTrack->setPlaying(m_isPlaying);
+    newTrack->setEditable(m_isEditable);
     m_tracks.append(newTrack);
     m_layout->addWidget(newTrack);
   }
@@ -77,18 +80,21 @@ void RythmoOverlay::sync(qint64 positionMs) {
 }
 
 void RythmoOverlay::setPlaying(bool playing) {
+  m_isPlaying = playing;
   for (RythmoWidget *track : m_tracks) {
     track->setPlaying(playing);
   }
 }
 
 void RythmoOverlay::setSpeed(int speed) {
+  m_currentSpeed = speed;
   for (RythmoWidget *track : m_tracks) {
     track->setSpeed(speed);
   }
 }
 
 void RythmoOverlay::setEditable(bool editable) {
+  m_isEditable = editable;
   for (RythmoWidget *track : m_tracks) {
     track->setEditable(editable);
   }

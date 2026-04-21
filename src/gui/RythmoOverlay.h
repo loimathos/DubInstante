@@ -73,6 +73,11 @@ private:
 
   QVector<RythmoWidget *> m_tracks;
   QVBoxLayout *m_layout;
+  
+  // State for newly created tracks
+  int m_currentSpeed = 100;
+  bool m_isPlaying = false;
+  bool m_isEditable = true;
 };
 
 #endif // RYTHMOOVERLAY_H

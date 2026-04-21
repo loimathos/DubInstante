@@ -46,7 +46,13 @@ echo "--- Packaging AppImage ---"
 mkdir -p "$DIST_DIR"
 
 # Set environment variables for linuxdeploy-plugin-qt
-export QMAKE="/usr/lib/qt6/bin/qmake"
+export QMAKE=$(which qmake6)
+if [ -z "$QMAKE" ]; then
+    export QMAKE=$(which qmake)
+fi
+if [ -z "$QMAKE" ]; then
+    export QMAKE="/usr/lib/qt6/bin/qmake"
+fi
 export MAKEFLAGS="-j$(nproc)"
 export EXTRA_QT_PLUGINS="multimedia"
 
