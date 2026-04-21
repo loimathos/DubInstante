@@ -1,6 +1,7 @@
 # DubInstante - Professional Video Dubbing Studio
 
 **DubInstante** is a professional video dubbing software designed to be powerful, intuitive, and visually refined.
+[![Build and Release](https://github.com/loinstante/DubInstante/actions/workflows/main.yml/badge.svg)](https://github.com/loinstante/DubInstante/actions/workflows/main.yml)
 
 ## 📚 Documentation
 
