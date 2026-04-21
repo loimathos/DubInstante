@@ -4,13 +4,15 @@
  */
 
 #include "PlaybackEngine.h"
+#include "FFmpegFrameExtractor.h"
 
 #include <QMediaMetaData>
 #include <QVideoSink>
 
 PlaybackEngine::PlaybackEngine(QObject *parent)
     : QObject(parent), m_mediaPlayer(new QMediaPlayer(this)),
-      m_audioOutput(new QAudioOutput(this)) {
+      m_audioOutput(new QAudioOutput(this)),
+      m_frameExtractor(new FFmpegFrameExtractor(this)) {
   m_mediaPlayer->setAudioOutput(m_audioOutput);
   m_audioOutput->setVolume(1.0f);
 
@@ -36,6 +38,10 @@ PlaybackEngine::PlaybackEngine(QObject *parent)
             Q_UNUSED(error)
             emit errorOccurred(errorString);
           });
+
+  // Forward extractor signal
+  connect(m_frameExtractor, &FFmpegFrameExtractor::frameExtracted, this,
+          &PlaybackEngine::frameExtracted);
 }
 
 void PlaybackEngine::setVideoSink(QVideoSink *sink) {
@@ -44,6 +50,8 @@ void PlaybackEngine::setVideoSink(QVideoSink *sink) {
 
 void PlaybackEngine::openFile(const QUrl &url) {
   m_mediaPlayer->setSource(url);
+  m_currentFilePath = url.toLocalFile();
+  m_frameExtractor->openFile(m_currentFilePath);
   // Reverted immediate pause() to prevent GStreamer crash
 }
 
@@ -59,6 +67,9 @@ void PlaybackEngine::stop() { m_mediaPlayer->stop(); }
 
 void PlaybackEngine::seek(qint64 position) {
   m_mediaPlayer->setPosition(position);
+  if (m_mediaPlayer->playbackState() != QMediaPlayer::PlayingState) {
+      m_frameExtractor->requestFrame(position);
+  }
 }
 
 qint64 PlaybackEngine::duration() const { return m_mediaPlayer->duration(); }

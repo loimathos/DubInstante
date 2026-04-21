@@ -15,7 +15,7 @@
 // GUI includes
 #include "ClickableSlider.h"
 #include "RythmoOverlay.h"
-#include "TrackPanel.h"
+#include "TrackWidget.h"
 #include "TrackSettingsDialog.h"
 #include "VideoWidget.h"
 
@@ -23,6 +23,7 @@
 #include "TimeFormatter.h"
 
 #include <QDir>
+#include <QGraphicsDropShadowEffect>
 #include <QEvent>
 #include <QFile>
 #include <QFileDialog>
@@ -67,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent)
   setWindowTitle("DubInstante - Studio");
   resize(900, 600);
   setMinimumSize(800, 500);
+  setWindowState(Qt::WindowMaximized);
 }
 
 // =============================================================================
@@ -83,11 +85,13 @@ void MainWindow::loadStylesheet() {
 
 void MainWindow::setupUi() {
   QWidget *centralWidget = new QWidget(this);
+  centralWidget->setObjectName("CentralWidget");
+  centralWidget->setAttribute(Qt::WA_StyledBackground, true);
   setCentralWidget(centralWidget);
 
   QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-  mainLayout->setContentsMargins(5, 5, 5, 5);
-  mainLayout->setSpacing(5);
+  mainLayout->setContentsMargins(0, 0, 0, 0);
+  mainLayout->setSpacing(0);
 
   // =========================================================================
   // Video Area with Overlay
@@ -126,105 +130,201 @@ void MainWindow::setupUi() {
   // =========================================================================
 
   m_positionSlider = new ClickableSlider(Qt::Horizontal, this);
+  m_positionSlider->setObjectName("positionSlider");
   m_positionSlider->setRange(0, 0);
   mainLayout->addWidget(m_positionSlider);
 
   // =========================================================================
-  // Playback Controls
+  // Control Bar
   // =========================================================================
 
-  QHBoxLayout *controlsLayout = new QHBoxLayout();
-  controlsLayout->setSpacing(10);
+  QWidget *controlBarHost = new QWidget(this);
+  QHBoxLayout *controlBarHostLayout = new QHBoxLayout(controlBarHost);
+  controlBarHostLayout->setContentsMargins(12, 10, 12, 0);
+  controlBarHostLayout->setSpacing(0);
 
-  m_playPauseButton =
-      new QPushButton(QIcon(":/resources/icons/play.svg"), "", this);
-  m_playPauseButton->setFixedSize(36, 36);
-  m_playPauseButton->setIconSize(QSize(24, 24));
-  controlsLayout->addWidget(m_playPauseButton);
+  QWidget *controlBar = new QWidget(controlBarHost);
+  controlBar->setObjectName("controlBar");
+  controlBar->setMinimumHeight(72);
+  controlBar->setAttribute(Qt::WA_StyledBackground, true);
+  controlBar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-  m_stopButton = new QPushButton(QIcon(":/resources/icons/stop.svg"), "", this);
-  m_stopButton->setFixedSize(36, 36);
-  m_stopButton->setIconSize(QSize(24, 24));
-  controlsLayout->addWidget(m_stopButton);
+  auto *controlShadow = new QGraphicsDropShadowEffect(controlBar);
+  controlShadow->setBlurRadius(20);
+  controlShadow->setOffset(0, 4);
+  controlShadow->setColor(QColor(17, 24, 39, 28));
+  controlBar->setGraphicsEffect(controlShadow);
+  controlBarHostLayout->addWidget(controlBar);
 
-  m_timeLabel = new QLabel("00:00 / 00:00", this);
-  m_timeLabel->setStyleSheet(
-      "color: #666; font-family: monospace; font-weight: bold;");
-  controlsLayout->addWidget(m_timeLabel);
+  QHBoxLayout *controlBarLayout = new QHBoxLayout(controlBar);
+  controlBarLayout->setContentsMargins(18, 12, 18, 12);
+  controlBarLayout->setSpacing(12);
 
-  controlsLayout->addStretch();
+  m_stepBackButton = new QPushButton(QIcon(":/resources/icons/arrow_left.svg"), "", controlBar);
+  m_stepBackButton->setObjectName("btnStepBack");
+  m_stepBackButton->setProperty("cssClass", "iconButton");
+  m_stepBackButton->setToolTip("Reculer (1 frame)");
+  m_stepBackButton->setMinimumSize(32, 32);
 
-  // Volume controls
-  m_volumeButton =
-      new QPushButton(QIcon(":/resources/icons/arrow_up.svg"), "", this);
-  m_volumeButton->setFixedSize(24, 24);
-  m_volumeButton->setFlat(true);
-  controlsLayout->addWidget(m_volumeButton);
+  m_playButton = new QPushButton(QIcon(":/resources/icons/play.svg"), " PLAY", controlBar);
+  m_playButton->setObjectName("btnPlay");
+  m_playButton->setProperty("class", "btn");
 
-  m_volumeSlider = new ClickableSlider(Qt::Horizontal, this);
-  m_volumeSlider->setRange(0, 100);
-  m_volumeSlider->setValue(100);
-  m_volumeSlider->setFixedWidth(100);
-  controlsLayout->addWidget(m_volumeSlider);
+  m_pauseButton = new QPushButton(QIcon(":/resources/icons/pause.svg"), " PAUSE", controlBar);
+  m_pauseButton->setObjectName("btnPause");
+  m_pauseButton->setProperty("class", "btn");
 
-  m_volumeSpinBox = new QSpinBox(this);
-  m_volumeSpinBox->setRange(0, 100);
-  m_volumeSpinBox->setValue(100);
-  m_volumeSpinBox->setFixedWidth(90);
-  m_volumeSpinBox->setAlignment(Qt::AlignRight);
-  m_volumeSpinBox->setSuffix("%");
-  controlsLayout->addWidget(m_volumeSpinBox);
+  m_stopButton = new QPushButton("⏹ STOP", controlBar);
+  m_stopButton->setObjectName("btnStop");
+  m_stopButton->setProperty("class", "btn");
 
-  m_recordButton =
-      new QPushButton(QIcon(":/resources/icons/record.svg"), "REC", this);
-  m_recordButton->setObjectName("recordButton");
-  m_recordButton->setCheckable(true);
-  m_recordButton->setFixedSize(90, 36);
-  m_recordButton->setIconSize(QSize(16, 16));
-  m_recordButton->setCursor(Qt::PointingHandCursor);
-  controlsLayout->addWidget(m_recordButton);
+  m_stepForwardButton = new QPushButton(QIcon(":/resources/icons/arrow_right.svg"), "", controlBar);
+  m_stepForwardButton->setObjectName("btnStepForward");
+  m_stepForwardButton->setProperty("cssClass", "iconButton");
+  m_stepForwardButton->setToolTip("Avancer (1 frame)");
+  m_stepForwardButton->setMinimumSize(32, 32);
 
-  mainLayout->addLayout(controlsLayout);
+  m_timeLabel = new QLabel("00:00 / 00:00", controlBar);
+  m_timeLabel->setObjectName("timecodeLabel");
 
-  // =========================================================================
-  // Bottom Controls (Tracks + Settings)
-  // =========================================================================
+  QHBoxLayout *group1Layout = new QHBoxLayout();
+  group1Layout->setSpacing(8);
+  group1Layout->addWidget(m_stepBackButton);
+  group1Layout->addWidget(m_playButton);
+  group1Layout->addWidget(m_pauseButton);
+  group1Layout->addWidget(m_stopButton);
+  group1Layout->addWidget(m_stepForwardButton);
+  group1Layout->addWidget(m_timeLabel);
 
-  QHBoxLayout *bottomControlsLayout = new QHBoxLayout();
+  controlBarLayout->addLayout(group1Layout);
+  controlBarLayout->addStretch();
 
-  // Tracks column (dynamic)
-  m_tracksLayout = new QVBoxLayout();
-  m_tracksLayout->setSpacing(5);
+  // Group 2: Speed and Recording
+  QHBoxLayout *group2Layout = new QHBoxLayout();
+  group2Layout->setContentsMargins(0, 0, 0, 0);
+  group2Layout->setSpacing(8);
 
-  bottomControlsLayout->addLayout(m_tracksLayout);
-  bottomControlsLayout->addStretch();
+  QLabel *speedLabel = new QLabel("Vitesse Défilement", controlBar);
+  speedLabel->setProperty("cssClass", "control-label");
+  group2Layout->addWidget(speedLabel);
 
-  // Speed controls column
-  QVBoxLayout *speedLayout = new QVBoxLayout();
-  speedLayout->setSpacing(2);
-  speedLayout->addWidget(new QLabel("Vitesse Défilement:", this));
+  m_speedDownButton = new QPushButton("−", controlBar);
+  m_speedDownButton->setObjectName("speedDownButton");
+  m_speedDownButton->setProperty("cssClass", "stepButton");
+  m_speedDownButton->setToolTip(tr("Ralentir (-10%)"));
+  m_speedDownButton->setMinimumSize(28, 28);
+  group2Layout->addWidget(m_speedDownButton);
 
-  m_speedSpinBox = new QSpinBox(this);
+  m_speedSpinBox = new QSpinBox(controlBar);
+  m_speedSpinBox->setObjectName("speedSpinBox");
   m_speedSpinBox->setRange(1, 400);
   m_speedSpinBox->setValue(100);
   m_speedSpinBox->setSuffix("%");
-  m_speedSpinBox->setFixedWidth(90);
+  m_speedSpinBox->setFixedWidth(82);
   m_speedSpinBox->setAlignment(Qt::AlignRight);
   m_speedSpinBox->setSingleStep(10);
-  speedLayout->addWidget(m_speedSpinBox);
+  group2Layout->addWidget(m_speedSpinBox);
 
-  m_textColorCheck = new QCheckBox("Texte Blanc", this);
-  speedLayout->addWidget(m_textColorCheck);
+  m_speedUpButton = new QPushButton("+", controlBar);
+  m_speedUpButton->setObjectName("speedUpButton");
+  m_speedUpButton->setProperty("cssClass", "stepButton");
+  m_speedUpButton->setToolTip(tr("Accélérer (+10%)"));
+  m_speedUpButton->setMinimumSize(28, 28);
+  group2Layout->addWidget(m_speedUpButton);
 
-  bottomControlsLayout->addLayout(speedLayout);
 
-  bottomControlsLayout->addSpacing(20);
+  m_textColorCheck = new QCheckBox("Texte Blanc", controlBar);
+  m_textColorCheck->setProperty("cssClass", "control-check");
+  m_textColorCheck->setVisible(false);
 
-  m_exportProgressBar = new QProgressBar(this);
+  m_recordButton = new QPushButton("● REC GLOBAL", controlBar);
+  m_recordButton->setObjectName("recordButton");
+  m_recordButton->setCheckable(true);
+  m_recordButton->setMinimumHeight(34);
+  m_recordButton->setMinimumWidth(132);
+  m_recordButton->setCursor(Qt::PointingHandCursor);
+  group2Layout->addWidget(m_recordButton);
+
+  controlBarLayout->addLayout(group2Layout);
+  controlBarLayout->addStretch();
+
+  // Group 3: Volume Controls
+  QHBoxLayout *group3Layout = new QHBoxLayout();
+  group3Layout->setContentsMargins(0, 0, 0, 0);
+  group3Layout->setSpacing(8);
+
+  QLabel *masterLabel = new QLabel("Master Vol", controlBar);
+  masterLabel->setProperty("cssClass", "control-label");
+  group3Layout->addWidget(masterLabel);
+
+  m_volumeMuteButton =
+      new QPushButton(QIcon(":/resources/icons/volume.svg"), "", controlBar);
+  m_volumeMuteButton->setObjectName("volumeMuteButton");
+  m_volumeMuteButton->setProperty("cssClass", "iconButton");
+  m_volumeMuteButton->setCheckable(true);
+  m_volumeMuteButton->setToolTip(tr("Activer/Désactiver le son"));
+  m_volumeMuteButton->setMinimumSize(30, 30);
+  group3Layout->addWidget(m_volumeMuteButton);
+
+  m_volumeDownButton = new QPushButton("−", controlBar);
+  m_volumeDownButton->setObjectName("volumeDownButton");
+  m_volumeDownButton->setProperty("cssClass", "stepButton");
+  m_volumeDownButton->setToolTip(tr("Baisser le volume (-5%)"));
+  m_volumeDownButton->setMinimumSize(28, 28);
+  group3Layout->addWidget(m_volumeDownButton);
+
+  m_volumeSlider = new ClickableSlider(Qt::Horizontal, controlBar);
+  m_volumeSlider->setObjectName("masterVolumeSlider");
+  m_volumeSlider->setRange(0, 100);
+  m_volumeSlider->setValue(100);
+  m_volumeSlider->setFixedWidth(112);
+  group3Layout->addWidget(m_volumeSlider);
+
+  m_volumeUpButton = new QPushButton("+", controlBar);
+  m_volumeUpButton->setObjectName("volumeUpButton");
+  m_volumeUpButton->setProperty("cssClass", "stepButton");
+  m_volumeUpButton->setToolTip(tr("Monter le volume (+5%)"));
+  m_volumeUpButton->setMinimumSize(28, 28);
+  group3Layout->addWidget(m_volumeUpButton);
+
+  m_volumeSpinBox = new QSpinBox(controlBar);
+  m_volumeSpinBox->setObjectName("volumeSpinBox");
+  m_volumeSpinBox->setRange(0, 100);
+  m_volumeSpinBox->setValue(100);
+  m_volumeSpinBox->setFixedWidth(86);
+  m_volumeSpinBox->setAlignment(Qt::AlignRight);
+  m_volumeSpinBox->setSuffix("%");
+  group3Layout->addWidget(m_volumeSpinBox);
+
+  m_exportProgressBar = new QProgressBar(controlBar);
   m_exportProgressBar->setVisible(false);
-  bottomControlsLayout->addWidget(m_exportProgressBar);
+  m_exportProgressBar->setFixedWidth(132);
+  group3Layout->addWidget(m_exportProgressBar);
 
-  mainLayout->addLayout(bottomControlsLayout);
+  controlBarLayout->addLayout(group3Layout);
+
+  mainLayout->addWidget(controlBarHost);
+
+  // =========================================================================
+  // Mixer Zone
+  // =========================================================================
+
+  QWidget *mixerHost = new QWidget(this);
+  QHBoxLayout *mixerHostLayout = new QHBoxLayout(mixerHost);
+  mixerHostLayout->setContentsMargins(12, 10, 12, 12);
+  mixerHostLayout->setSpacing(0);
+
+  QWidget *mixerZone = new QWidget(mixerHost);
+  mixerZone->setObjectName("mixerZone");
+  mixerZone->setFixedHeight(240);
+  mixerZone->setAttribute(Qt::WA_StyledBackground, true);
+  m_tracksLayout = new QHBoxLayout(mixerZone);
+  m_tracksLayout->setContentsMargins(18, 18, 18, 18);
+  m_tracksLayout->setSpacing(14);
+
+  mixerHostLayout->addWidget(mixerZone);
+
+  mainLayout->addWidget(mixerHost);
 
   // Initial sync
   m_rythmoOverlay->setSpeed(m_speedSpinBox->value());
@@ -326,17 +426,21 @@ void MainWindow::createMenus() {
   menuBar->setCornerWidget(rightMenuBar, Qt::TopRightCorner);
 
   QWidget *accountWidget = new QWidget(this);
+  accountWidget->setObjectName("accountPanel");
   QVBoxLayout *accountLayout = new QVBoxLayout(accountWidget);
   accountLayout->setContentsMargins(10, 10, 10, 10);
 
   QLineEdit *emailEdit = new QLineEdit(accountWidget);
+  emailEdit->setObjectName("accountEmailInput");
   emailEdit->setPlaceholderText(tr("Email"));
 
   QLineEdit *passwordEdit = new QLineEdit(accountWidget);
+  passwordEdit->setObjectName("accountPasswordInput");
   passwordEdit->setPlaceholderText(tr("Password"));
   passwordEdit->setEchoMode(QLineEdit::Password);
 
   QPushButton *loginBtn = new QPushButton(tr("Login"), accountWidget);
+  loginBtn->setObjectName("accountLoginButton");
 
   accountLayout->addWidget(emailEdit);
   accountLayout->addWidget(passwordEdit);
@@ -352,12 +456,20 @@ void MainWindow::setupConnections() {
   // Playback Controls
   // =========================================================================
 
-  connect(m_playPauseButton, &QPushButton::clicked, this, [this]() {
-    if (m_playbackEngine->playbackState() == QMediaPlayer::PlayingState) {
-      m_playbackEngine->pause();
-    } else {
-      m_playbackEngine->play();
-    }
+  connect(m_playButton, &QPushButton::clicked, this, [this]() {
+    m_playbackEngine->play();
+  });
+
+  connect(m_pauseButton, &QPushButton::clicked, this, [this]() {
+    m_playbackEngine->pause();
+  });
+
+  connect(m_stepBackButton, &QPushButton::clicked, this, [this]() {
+    m_playbackEngine->seek(qMax(0LL, m_playbackEngine->position() - 40));
+  });
+
+  connect(m_stepForwardButton, &QPushButton::clicked, this, [this]() {
+    m_playbackEngine->seek(qMin(m_playbackEngine->duration(), m_playbackEngine->position() + 40));
   });
 
   connect(m_stopButton, &QPushButton::clicked, this, [this]() {
@@ -379,6 +491,8 @@ void MainWindow::setupConnections() {
           &MainWindow::onPlaybackStateChanged);
   connect(m_playbackEngine, &PlaybackEngine::errorOccurred, this,
           &MainWindow::onError);
+  connect(m_playbackEngine, &PlaybackEngine::frameExtracted, m_videoWidget,
+          &VideoWidget::forceFrame);
 
   // PlaybackEngine -> RythmoManager -> RythmoOverlay
   connect(m_playbackEngine, &PlaybackEngine::positionChanged, m_rythmoManager,
@@ -418,6 +532,12 @@ void MainWindow::setupConnections() {
       m_volumeSpinBox->setValue(value);
       m_volumeSpinBox->blockSignals(false);
     }
+    bool isMuted = (value == 0);
+    if (m_volumeMuteButton->isChecked() != isMuted) {
+      m_volumeMuteButton->blockSignals(true);
+      m_volumeMuteButton->setChecked(isMuted);
+      m_volumeMuteButton->blockSignals(false);
+    }
     if (value > 0) {
       m_previousVolume = value;
     }
@@ -433,13 +553,23 @@ void MainWindow::setupConnections() {
             }
           });
 
-  connect(m_volumeButton, &QPushButton::clicked, this, [this]() {
+  connect(m_volumeDownButton, &QPushButton::clicked, this, [this]() {
+    m_volumeSlider->setValue(qMax(0, m_volumeSlider->value() - 5));
+  });
+
+  connect(m_volumeUpButton, &QPushButton::clicked, this, [this]() {
+    m_volumeSlider->setValue(qMin(100, m_volumeSlider->value() + 5));
+  });
+
+  connect(m_volumeMuteButton, &QPushButton::clicked, this, [this]() {
     if (m_volumeSlider->value() > 0) {
       m_previousVolume = m_volumeSlider->value();
       m_volumeSlider->setValue(0);
-    } else {
-      m_volumeSlider->setValue(m_previousVolume);
+      return;
     }
+
+    int restored = qBound(1, m_previousVolume, 100);
+    m_volumeSlider->setValue(restored);
   });
 
   connect(m_playbackEngine, &PlaybackEngine::volumeChanged, this,
@@ -466,6 +596,17 @@ void MainWindow::setupConnections() {
   connect(m_speedSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
           m_rythmoManager, &RythmoManager::setSpeed);
 
+    connect(m_speedDownButton, &QPushButton::clicked, this, [this]() {
+      m_speedSpinBox->setValue(qMax(m_speedSpinBox->minimum(),
+            m_speedSpinBox->value() - 10));
+    });
+
+    connect(m_speedUpButton, &QPushButton::clicked, this, [this]() {
+      m_speedSpinBox->setValue(qMin(m_speedSpinBox->maximum(),
+            m_speedSpinBox->value() + 10));
+    });
+
+
   connect(m_textColorCheck, &QCheckBox::toggled, this, [this](bool checked) {
     QColor color = checked ? QColor(Qt::white) : QColor(34, 34, 34);
     for (int i = 0; i < m_trackCount; ++i) {
@@ -477,7 +618,7 @@ void MainWindow::setupConnections() {
 
   connect(m_actionPersonalizeRythmo, &QAction::triggered, this, [this]() {
     TrackSettingsDialog *dialog =
-        new TrackSettingsDialog(m_rythmoManager, m_trackCount, this);
+        new TrackSettingsDialog(m_rythmoManager, m_trackCount, 0, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
   });
@@ -531,11 +672,19 @@ void MainWindow::setTrackCount(int count) {
     connect(recorder, &AudioRecorder::errorOccurred, this,
             &MainWindow::onError);
 
-    // Create TrackPanel
-    TrackPanel *panel = new TrackPanel(
-        QString("Piste %1").arg(idx + 1), recorder, this);
+    // Create TrackWidget
+    TrackWidget *panel = new TrackWidget(idx + 1, 
+        QString("Piste %1").arg(idx + 1), "#7c56f5", this);
     m_trackPanels.append(panel);
     m_tracksLayout->addWidget(panel);
+
+    // Gear button → open settings dialog with this track selected
+    connect(panel, &TrackWidget::optionsClicked, this, [this, idx]() {
+      TrackSettingsDialog *dialog =
+          new TrackSettingsDialog(m_rythmoManager, m_trackCount, idx, this);
+      dialog->setAttribute(Qt::WA_DeleteOnClose);
+      dialog->show();
+    });
 
     // Setup temp audio path
     m_tempAudioPaths.append(
@@ -551,8 +700,8 @@ void MainWindow::setTrackCount(int count) {
   while (m_trackCount > count) {
     int idx = m_trackCount - 1;
 
-    // Remove TrackPanel
-    TrackPanel *panel = m_trackPanels.takeLast();
+    // Remove TrackWidget
+    TrackWidget *panel = m_trackPanels.takeLast();
     m_tracksLayout->removeWidget(panel);
     panel->deleteLater();
 
@@ -688,8 +837,8 @@ void MainWindow::onSaveProject() {
   // Save audio tracks
   for (int i = 0; i < m_trackCount; ++i) {
     TrackAudioSaveData audioData;
-    audioData.audioInput = m_trackPanels[i]->selectedDevice().description();
-    audioData.audioGain = m_trackPanels[i]->gain();
+    audioData.audioInput = m_trackPanels[i]->currentInputDevice();
+    audioData.audioGain = m_trackPanels[i]->currentVolume() / 100.0f;
     data.audioTracks.append(audioData);
   }
 
@@ -809,13 +958,8 @@ void MainWindow::onLoadProject() {
 
   // Restore audio device selection and gain
   for (int i = 0; i < qMin(data.audioTracks.size(), m_trackCount); ++i) {
-    for (const auto &dev : m_audioRecorders[i]->availableDevices()) {
-      if (dev.description() == data.audioTracks[i].audioInput) {
-        m_trackPanels[i]->setDevice(dev);
-        break;
-      }
-    }
-    m_trackPanels[i]->setVolume(data.audioTracks[i].audioGain);
+    m_trackPanels[i]->setInputDevice(data.audioTracks[i].audioInput);
+    m_trackPanels[i]->setVolume(static_cast<int>(data.audioTracks[i].audioGain * 100));
   }
 
   statusBar()->showMessage(tr("Projet chargé"), 3000);
@@ -839,11 +983,7 @@ void MainWindow::onDurationChanged(qint64 duration) {
 }
 
 void MainWindow::onPlaybackStateChanged(QMediaPlayer::PlaybackState state) {
-  if (state == QMediaPlayer::PlayingState) {
-    m_playPauseButton->setIcon(QIcon(":/resources/icons/pause.svg"));
-  } else {
-    m_playPauseButton->setIcon(QIcon(":/resources/icons/play.svg"));
-  }
+
 }
 
 // =============================================================================
@@ -865,7 +1005,7 @@ void MainWindow::toggleRecording() {
 
     // Start recording on all tracks
     for (int i = 0; i < m_trackCount; ++i) {
-      m_trackPanels[i]->startRecording(
+      m_audioRecorders[i]->startRecording(
           QUrl::fromLocalFile(m_tempAudioPaths[i]));
     }
 
@@ -890,7 +1030,7 @@ void MainWindow::toggleRecording() {
 
     // Stop recording on all tracks
     for (int i = 0; i < m_trackCount; ++i) {
-      m_trackPanels[i]->stopRecording();
+      m_audioRecorders[i]->stopRecording();
     }
 
     // Exit fullscreen if active

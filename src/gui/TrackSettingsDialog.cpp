@@ -6,6 +6,7 @@
 #include <QComboBox>
 #include <QFontComboBox>
 #include <QFontDatabase>
+#include <QFrame>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -14,11 +15,19 @@
 #include <QVBoxLayout>
 
 TrackSettingsDialog::TrackSettingsDialog(RythmoManager *rythmoManager,
-                                         int trackCount, QWidget *parent)
-    : QDialog(parent), m_rythmoManager(rythmoManager), m_currentTrackIndex(0),
+                                         int trackCount,
+                                         int initialTrackIndex,
+                                         QWidget *parent)
+    : QDialog(parent), m_rythmoManager(rythmoManager),
+      m_currentTrackIndex(qBound(0, initialTrackIndex, qBound(1, trackCount, 4) - 1)),
       m_trackCount(qBound(1, trackCount, 4)) {
 
   setupUi();
+
+  // Pre-select the initial track button
+  if (m_currentTrackIndex < m_trackButtons.size()) {
+    m_trackButtons[m_currentTrackIndex]->setChecked(true);
+  }
 
   connect(m_rythmoManager, &RythmoManager::trackStyleChanged, this,
           &TrackSettingsDialog::onManagerStyleChanged);
@@ -27,21 +36,45 @@ TrackSettingsDialog::TrackSettingsDialog(RythmoManager *rythmoManager,
 }
 
 void TrackSettingsDialog::setupUi() {
+  setObjectName("trackSettingsDialog");
   setWindowTitle(tr("Personnalisation de la Bande Rythmo"));
-  setMinimumWidth(500);
+  setMinimumSize(680, 560);
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  mainLayout->setContentsMargins(20, 20, 20, 20);
+  mainLayout->setSpacing(14);
+
+  QLabel *titleLabel = new QLabel(tr("Personnaliser la Bande Rythmo"), this);
+  titleLabel->setObjectName("settingsDialogTitle");
+  mainLayout->addWidget(titleLabel);
+
+  QLabel *subtitleLabel =
+      new QLabel(tr("Réglages visuels en direct, sans interrompre le flux."),
+                 this);
+  subtitleLabel->setObjectName("settingsDialogSubtitle");
+  mainLayout->addWidget(subtitleLabel);
 
   // Track Selector
-  QHBoxLayout *topLayout = new QHBoxLayout();
-  topLayout->addWidget(new QLabel(tr("Piste à modifier :")));
+  QFrame *trackSelectorCard = new QFrame(this);
+  trackSelectorCard->setObjectName("settingsCardTrackSelector");
+  QHBoxLayout *topLayout = new QHBoxLayout(trackSelectorCard);
+  topLayout->setContentsMargins(14, 12, 14, 12);
+  topLayout->setSpacing(8);
+
+  QLabel *trackSelectorLabel =
+      new QLabel(tr("Piste à modifier"), trackSelectorCard);
+  trackSelectorLabel->setProperty("cssClass", "settingsLabel");
+  topLayout->addWidget(trackSelectorLabel);
 
   m_trackGroup = new QButtonGroup(this);
   m_trackGroup->setExclusive(true);
 
   for (int i = 0; i < m_trackCount; ++i) {
-    QPushButton *btn = new QPushButton(tr("Piste %1").arg(i + 1));
+    QPushButton *btn =
+        new QPushButton(tr("Piste %1").arg(i + 1), trackSelectorCard);
     btn->setCheckable(true);
+    btn->setProperty("cssClass", "trackSelectorButton");
+    btn->setMinimumHeight(30);
     if (i == 0)
       btn->setChecked(true);
     m_trackGroup->addButton(btn, i);
@@ -53,16 +86,21 @@ void TrackSettingsDialog::setupUi() {
           &TrackSettingsDialog::onTrackSelected);
 
   topLayout->addStretch();
-  mainLayout->addLayout(topLayout);
+    mainLayout->addWidget(trackSelectorCard);
 
   // Live Preview
-  QGroupBox *previewGroup = new QGroupBox(tr("Aperçu en direct"));
+    QGroupBox *previewGroup = new QGroupBox(tr("Aperçu en direct"), this);
+    previewGroup->setObjectName("settingsGroupPreview");
   QVBoxLayout *previewLayout = new QVBoxLayout(previewGroup);
-  m_previewWidget = new RythmoWidget(this);
+    previewLayout->setContentsMargins(14, 20, 14, 14);
+    previewLayout->setSpacing(10);
+
+    m_previewWidget = new RythmoWidget(previewGroup);
   m_previewWidget->setVisualStyle(RythmoWidget::Standalone);
   m_previewWidget->setEditable(false);
   m_previewWidget->setSpeed(100);
   m_previewWidget->setPlaying(true);
+    m_previewWidget->setMinimumHeight(92);
   m_previewWidget->updateDisplay(
       0, 0, "Hello, voici un aperçu de la piste Rythmo...  ", 100);
 
@@ -84,14 +122,26 @@ void TrackSettingsDialog::setupUi() {
   mainLayout->addWidget(previewGroup);
 
   // Presets
-  QGroupBox *presetsGroup = new QGroupBox(tr("Préréglages"));
+  QGroupBox *presetsGroup = new QGroupBox(tr("Préréglages"), this);
+  presetsGroup->setObjectName("settingsGroupPresets");
   QHBoxLayout *presetsLayout = new QHBoxLayout(presetsGroup);
-  m_presetClassic = new QPushButton(tr("Classique"));
-  m_presetDark = new QPushButton(tr("Sombre"));
-  m_presetBlue = new QPushButton(tr("Bleu"));
-  m_presetRed = new QPushButton(tr("Rouge"));
-  m_presetGreen = new QPushButton(tr("Vert"));
-  m_presetYellow = new QPushButton(tr("Jaune"));
+  presetsLayout->setContentsMargins(14, 20, 14, 14);
+  presetsLayout->setSpacing(8);
+
+  m_presetClassic = new QPushButton(tr("Classique"), presetsGroup);
+  m_presetDark = new QPushButton(tr("Sombre"), presetsGroup);
+  m_presetBlue = new QPushButton(tr("Bleu"), presetsGroup);
+  m_presetRed = new QPushButton(tr("Rouge"), presetsGroup);
+  m_presetGreen = new QPushButton(tr("Vert"), presetsGroup);
+  m_presetYellow = new QPushButton(tr("Jaune"), presetsGroup);
+
+  QVector<QPushButton *> presetButtons = {m_presetClassic, m_presetDark,
+                                          m_presetBlue,    m_presetRed,
+                                          m_presetGreen,   m_presetYellow};
+  for (QPushButton *presetButton : presetButtons) {
+    presetButton->setProperty("cssClass", "presetButton");
+    presetButton->setMinimumHeight(30);
+  }
 
   presetsLayout->addWidget(m_presetClassic);
   presetsLayout->addWidget(m_presetDark);
@@ -116,11 +166,19 @@ void TrackSettingsDialog::setupUi() {
   mainLayout->addWidget(presetsGroup);
 
   // Fine Controls
-  QGroupBox *fineGroup = new QGroupBox(tr("Réglages Fins"));
+    QGroupBox *fineGroup = new QGroupBox(tr("Réglages Fins"), this);
+    fineGroup->setObjectName("settingsGroupFine");
   QGridLayout *fineLayout = new QGridLayout(fineGroup);
+    fineLayout->setContentsMargins(14, 20, 14, 14);
+    fineLayout->setHorizontalSpacing(12);
+    fineLayout->setVerticalSpacing(10);
 
-  fineLayout->addWidget(new QLabel(tr("Police :")), 0, 0);
-  m_fontComboBox = new QFontComboBox();
+    QLabel *fontLabel = new QLabel(tr("Police"), fineGroup);
+    fontLabel->setProperty("cssClass", "fineLabel");
+    fineLayout->addWidget(fontLabel, 0, 0);
+
+    m_fontComboBox = new QFontComboBox(fineGroup);
+    m_fontComboBox->setObjectName("settingsFontCombo");
   m_fontComboBox->setFontFilters(QFontComboBox::ScalableFonts);
   m_fontComboBox->setEditable(false);
   m_fontComboBox->setMinimumWidth(250);
@@ -130,21 +188,37 @@ void TrackSettingsDialog::setupUi() {
   fineLayout->addWidget(m_fontComboBox, 0, 1);
   fineLayout->setColumnStretch(1, 1);
 
-  fineLayout->addWidget(new QLabel(tr("Taille globale :")), 1, 0);
-  m_globalSizeSpinBox = new QSpinBox();
+    QLabel *sizeLabel = new QLabel(tr("Taille globale"), fineGroup);
+    sizeLabel->setProperty("cssClass", "fineLabel");
+    fineLayout->addWidget(sizeLabel, 1, 0);
+
+    m_globalSizeSpinBox = new QSpinBox(fineGroup);
+    m_globalSizeSpinBox->setObjectName("settingsGlobalSizeSpin");
   m_globalSizeSpinBox->setRange(10, 50);
   connect(m_globalSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
           this, &TrackSettingsDialog::updateGlobalSize);
   fineLayout->addWidget(m_globalSizeSpinBox, 1, 1);
 
-  fineLayout->addWidget(new QLabel(tr("Couleur Texte :")), 2, 0);
-  m_textColorButton = new QPushButton();
+    QLabel *textColorLabel = new QLabel(tr("Couleur texte"), fineGroup);
+    textColorLabel->setProperty("cssClass", "fineLabel");
+    fineLayout->addWidget(textColorLabel, 2, 0);
+
+    m_textColorButton = new QPushButton(fineGroup);
+    m_textColorButton->setObjectName("settingsTextColorButton");
+    m_textColorButton->setProperty("cssClass", "colorPickerButton");
+    m_textColorButton->setMinimumHeight(30);
   connect(m_textColorButton, &QPushButton::clicked, this,
           &TrackSettingsDialog::updateTextColor);
   fineLayout->addWidget(m_textColorButton, 2, 1);
 
-  fineLayout->addWidget(new QLabel(tr("Couleur Fond :")), 3, 0);
-  m_backgroundColorButton = new QPushButton();
+    QLabel *backgroundColorLabel = new QLabel(tr("Couleur fond"), fineGroup);
+    backgroundColorLabel->setProperty("cssClass", "fineLabel");
+    fineLayout->addWidget(backgroundColorLabel, 3, 0);
+
+    m_backgroundColorButton = new QPushButton(fineGroup);
+    m_backgroundColorButton->setObjectName("settingsBackgroundColorButton");
+    m_backgroundColorButton->setProperty("cssClass", "colorPickerButton");
+    m_backgroundColorButton->setMinimumHeight(30);
   connect(m_backgroundColorButton, &QPushButton::clicked, this,
           &TrackSettingsDialog::updateBackgroundColor);
   fineLayout->addWidget(m_backgroundColorButton, 3, 1);
@@ -153,8 +227,12 @@ void TrackSettingsDialog::setupUi() {
 
   // Add close button
   QHBoxLayout *bottomLayout = new QHBoxLayout();
+  bottomLayout->setContentsMargins(0, 4, 0, 0);
   bottomLayout->addStretch();
-  QPushButton *closeButton = new QPushButton(tr("Fermer"));
+  QPushButton *closeButton = new QPushButton(tr("Fermer"), this);
+  closeButton->setObjectName("settingsCloseButton");
+  closeButton->setMinimumHeight(34);
+  closeButton->setMinimumWidth(110);
   connect(closeButton, &QPushButton::clicked, this, &QDialog::accept);
   bottomLayout->addWidget(closeButton);
   mainLayout->addLayout(bottomLayout);
@@ -163,13 +241,22 @@ void TrackSettingsDialog::setupUi() {
 void TrackSettingsDialog::updateColorButton(QPushButton *btn,
                                             const QColor &color) {
   if (color.alpha() == 0) {
-    btn->setStyleSheet(
-        "background-color: transparent; border: 1px dashed #777;");
-    btn->setText("Transparent");
+    btn->setStyleSheet("background-color: #ffffff;"
+                       "border: 1px dashed #cbd5e1;"
+                       "border-radius: 8px;"
+                       "color: #64748b;"
+                       "padding: 4px 10px;");
+    btn->setText(tr("Transparent"));
   } else {
-    btn->setStyleSheet(QString("background-color: %1; border: 1px solid #777;")
-                           .arg(color.name(QColor::HexArgb)));
-    btn->setText("");
+    const QString textColor = color.lightnessF() > 0.55 ? "#0f172a" : "#ffffff";
+    btn->setStyleSheet(
+        QString("background-color: %1;"
+                "border: 1px solid #cbd5e1;"
+                "border-radius: 8px;"
+                "color: %2;"
+                "padding: 4px 10px;")
+            .arg(color.name(QColor::HexArgb), textColor));
+    btn->setText(color.name(QColor::HexRgb).toUpper());
   }
 }
 

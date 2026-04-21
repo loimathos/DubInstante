@@ -18,6 +18,7 @@ class TrackSettingsDialog : public QDialog {
 
 public:
   explicit TrackSettingsDialog(RythmoManager *rythmoManager, int trackCount,
+                               int initialTrackIndex = 0,
                                QWidget *parent = nullptr);
   ~TrackSettingsDialog() override = default;
 

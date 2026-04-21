@@ -39,6 +39,9 @@ public:
      */
     QVideoSink *videoSink() const;
 
+public slots:
+    void forceFrame(const QImage &image);
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 

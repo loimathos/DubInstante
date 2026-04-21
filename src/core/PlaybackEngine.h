@@ -16,7 +16,9 @@
 #include <QMediaPlayer>
 #include <QObject>
 #include <QUrl>
+#include <QString>
 
+class FFmpegFrameExtractor;
 class QVideoSink;
 
 /**
@@ -136,9 +138,14 @@ signals:
     /** @brief Emitted when an error occurs during playback. */
     void errorOccurred(const QString &error);
 
+    /** @brief Emitted when a frame is forced to be rendered. */
+    void frameExtracted(const QImage &image);
+
 private:
     QMediaPlayer *m_mediaPlayer;
     QAudioOutput *m_audioOutput;
+    FFmpegFrameExtractor *m_frameExtractor;
+    QString m_currentFilePath;
 };
 
 #endif // PLAYBACKENGINE_H

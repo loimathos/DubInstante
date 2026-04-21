@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DubInstante - Studio 1.0 (Full Width Layout)</title>
+    <style>
+        :root {
+            --bg-main: #e5e7eb;
+            --bg-panel: #ffffff;
+            --border: #d1d5db;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --accent: #3b82f6;
+            --rec-red: #ef4444;
+            --vu-green: #10b981;
+            --vu-yellow: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            outline: none;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- 1. HEADER --- */
+        header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dark);
+        }
+
+        /* --- 2. ZONE VIDÉO (Haut) --- */
+        .video-zone {
+            flex-grow: 1;
+            /* Prend tout l'espace disponible */
+            position: relative;
+            background: #000 url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=1200') center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            /* Pousse la bande rythmo vers le bas */
+            border-bottom: 2px solid var(--accent);
+        }
+
+        /* Bande Rythmo superposée */
+        .rythmo-band {
+            height: 100px;
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sync-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--rec-red);
+            z-index: 10;
+        }
+
+        .rythmo-text {
+            position: absolute;
+            left: 50%;
+            font-family: 'Consolas', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .text-1 {
+            color: #1e3a8a;
+            top: 15px;
+            animation: scroll 8s linear infinite;
+        }
+
+        .text-2 {
+            color: #831843;
+            top: 55px;
+            animation: scroll 10s linear infinite;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* --- 3. LA BARRE CENTRALE (Master + Transport) --- */
+        .control-bar {
+            height: 60px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: var(--bg-main);
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-play {
+            background: var(--accent);
+            color: white;
+            border: none;
+        }
+
+        .btn-play:hover {
+            background: #2563eb;
+        }
+
+        .btn-rec {
+            color: var(--rec-red);
+            border-color: var(--rec-red);
+        }
+
+        .btn-rec:hover {
+            background: #fee2e2;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .slider-group label {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        input[type="range"] {
+            accent-color: var(--accent);
+            width: 100px;
+            cursor: pointer;
+        }
+
+        .timecode {
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        /* Master VU Meter */
+        .master-vu {
+            background: #111827;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 200px;
+        }
+
+        .vu-tracks {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .vu-bg {
+            height: 6px;
+            background: #374151;
+            border-radius: 2px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .vu-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--vu-green) 60%, var(--vu-yellow) 85%, var(--rec-red) 100%);
+        }
+
+        .vu-val {
+            color: var(--accent);
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* --- 4. MIXER (Les 4 Pistes sur la largeur) --- */
+        .mixer-zone {
+            height: 220px;
+            background: var(--bg-main);
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            /* Divise l'espace en 4 colonnes égales */
+            gap: 15px;
+        }
+
+        .track {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .track-header {
+            font-size: 13px;
+            font-weight: bold;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .track-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .track-control label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: bold;
+            width: 30px;
+        }
+
+        .track-control select {
+            flex-grow: 1;
+            padding: 4px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .track-vu {
+            background: #111827;
+            padding: 6px;
+            border-radius: 4px;
+            margin-top: auto;
+        }
+
+        .track-vu .vu-bg {
+            height: 5px;
+        }
+
+        .color-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .color-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <span>Fichier | Édition | Options</span>
+        <span>DubInstante v1.0</span>
+    </header>
+
+    <div class="video-zone">
+        <div class="rythmo-band">
+            <div class="sync-line"></div>
+            <div class="rythmo-text text-1">tetstdgjhguk</div>
+            <div class="rythmo-text text-2">gugvejhvfjha</div>
+        </div>
+    </div>
+
+    <div class="control-bar">
+        <div class="control-group">
+            <button class="btn">📂 Importer</button>
+            <button class="btn btn-play">▶ Lecture</button>
+            <button class="btn">⏸</button>
+            <button class="btn">⏹</button>
+            <div class="timecode">00:04:12 / 01:20:00</div>
+        </div>
+
+        <div class="control-group">
+            <div class="slider-group">
+                <label>Spread Stéréo</label>
+                <input type="range" value="50">
+            </div>
+            <button class="btn btn-rec">● REC GLOBAL</button>
+        </div>
+
+        <div class="control-group">
+            <div class="slider-group">
+                <label>Master Vol</label>
+                <input type="range" value="80">
+            </div>
+            <div class="master-vu">
+                <div class="vu-tracks">
+                    <div class="vu-bg">
+                        <div class="vu-fill" style="width: 85%;"></div>
+                    </div>
+                    <div class="vu-bg">
+                        <div class="vu-fill" style="width: 80%;"></div>
+                    </div>
+                </div>
+                <div class="vu-val">-3dB</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mixer-zone">
+
+        <div class="track">
+            <div class="track-header"><span>Piste 1 (Doublage)</span><span>⚙️</span></div>
+            <div class="track-control">
+                <label>IN:</label>
+                <select>
+                    <option>🎤 Micro Shure</option>
+                    <option>Line In</option>
+                </select>
+            </div>
+            <div class="track-control">
+                <label>VOL:</label>
+                <input type="range" value="100" style="flex-grow: 1;">
+            </div>
+            <div class="track-vu">
+                <div class="vu-bg">
+                    <div class="vu-fill" style="width: 75%;"></div>
+                </div>
+            </div>
+            <div class="color-badge">
+                <div class="color-box" style="background: #1e3a8a;"></div> Texte Bleu
+            </div>
+        </div>
+
+        <div class="track">
+            <div class="track-header"><span>Piste 2 (Ambiance)</span><span>⚙️</span></div>
+            <div class="track-control">
+                <label>IN:</label>
+                <select>
+                    <option>💻 Audio Système</option>
+                    <option>Microphone</option>
+                </select>
+            </div>
+            <div class="track-control">
+                <label>VOL:</label>
+                <input type="range" value="60" style="flex-grow: 1;">
+            </div>
+            <div class="track-vu">
+                <div class="vu-bg">
+                    <div class="vu-fill" style="width: 40%;"></div>
+                </div>
+            </div>
+            <div class="color-badge">
+                <div class="color-box" style="background: #831843;"></div> Texte Rouge
+            </div>
+        </div>
+
+        <div class="track">
+            <div class="track-header"><span>Piste 3</span><span>⚙️</span></div>
+            <div class="track-control">
+                <label>IN:</label>
+                <select>
+                    <option>Aucune entrée</option>
+                </select>
+            </div>
+            <div class="track-control">
+                <label>VOL:</label>
+                <input type="range" value="0" style="flex-grow: 1;">
+            </div>
+            <div class="track-vu">
+                <div class="vu-bg">
+                    <div class="vu-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="color-badge">
+                <div class="color-box" style="background: #10b981;"></div> Texte Vert
+            </div>
+        </div>
+
+        <div class="track">
+            <div class="track-header"><span>Piste 4</span><span>⚙️</span></div>
+            <div class="track-control">
+                <label>IN:</label>
+                <select>
+                    <option>Aucune entrée</option>
+                </select>
+            </div>
+            <div class="track-control">
+                <label>VOL:</label>
+                <input type="range" value="0" style="flex-grow: 1;">
+            </div>
+            <div class="track-vu">
+                <div class="vu-bg">
+                    <div class="vu-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="color-badge">
+                <div class="color-box" style="background: #f59e0b;"></div> Texte Jaune
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

@@ -39,12 +39,14 @@ class AudioRecorder;
 class ExportService;
 class SaveManager;
 
-// Forward declarations - GUI layer
+// GUI includes
 class VideoWidget;
 class RythmoOverlay;
-class TrackPanel;
+class TrackWidget;
 class ClickableSlider;
 class QVBoxLayout;
+class QHBoxLayout;
+class QGridLayout;
 
 // Forward declaration - Utils
 struct ExportConfig;
@@ -127,22 +129,30 @@ private:
 
   VideoWidget *m_videoWidget;
   RythmoOverlay *m_rythmoOverlay;
-  QVector<TrackPanel *> m_trackPanels;
-  QVBoxLayout *m_tracksLayout;
+  QVector<TrackWidget *> m_trackPanels;
+  QHBoxLayout *m_tracksLayout;
 
   // Playback controls
-  QPushButton *m_playPauseButton;
+  QPushButton *m_stepBackButton;
+  QPushButton *m_playButton;
+  QPushButton *m_pauseButton;
   QPushButton *m_stopButton;
+  QPushButton *m_stepForwardButton;
   ClickableSlider *m_positionSlider;
   QLabel *m_timeLabel;
 
   // Volume controls
-  QPushButton *m_volumeButton;
+  QPushButton *m_volumeMuteButton;
+  QPushButton *m_volumeDownButton;
+  QPushButton *m_volumeUpButton;
   ClickableSlider *m_volumeSlider;
   QSpinBox *m_volumeSpinBox;
 
   // Recording controls
   QPushButton *m_recordButton;
+  QPushButton *m_speedDownButton;
+  QPushButton *m_speedUpButton;
+  QPushButton *m_speedResetButton;
   QSpinBox *m_speedSpinBox;
   QCheckBox *m_textColorCheck;
   QProgressBar *m_exportProgressBar;

@@ -26,6 +26,14 @@ QVideoSink *VideoWidget::videoSink() const
     return m_videoSink;
 }
 
+void VideoWidget::forceFrame(const QImage &image)
+{
+    if (!image.isNull()) {
+        m_currentImage = image;
+        update();
+    }
+}
+
 void VideoWidget::handleFrame(const QVideoFrame &frame)
 {
     if (!frame.isValid()) {

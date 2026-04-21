@@ -28,6 +28,13 @@ find_package(Qt6 REQUIRED COMPONENTS
 )
 
 # =============================================================================
+# FFmpeg Dependencies
+# =============================================================================
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil libswscale)
+
+# =============================================================================
 # Source Files by Layer
 # =============================================================================
 
@@ -35,6 +42,8 @@ find_package(Qt6 REQUIRED COMPONENTS
 set(CORE_SOURCES
     src/core/PlaybackEngine.h
     src/core/PlaybackEngine.cpp
+    src/core/FFmpegFrameExtractor.h
+    src/core/FFmpegFrameExtractor.cpp
     src/core/RythmoManager.h
     src/core/RythmoManager.cpp
     src/core/AudioRecorder.h
@@ -55,8 +64,8 @@ set(GUI_SOURCES
     src/gui/RythmoWidget.cpp
     src/gui/RythmoOverlay.h
     src/gui/RythmoOverlay.cpp
-    src/gui/TrackPanel.h
-    src/gui/TrackPanel.cpp
+    src/gui/TrackWidget.h
+    src/gui/TrackWidget.cpp
     src/gui/TrackSettingsDialog.h
     src/gui/TrackSettingsDialog.cpp
     src/gui/ClickableSlider.h
@@ -120,4 +129,5 @@ target_link_libraries(DubInstante PRIVATE
     Qt6::OpenGLWidgets
     Qt6::OpenGL
     Qt6::Concurrent
+    PkgConfig::FFMPEG
 )
