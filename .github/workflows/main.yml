@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential cmake wget libfuse2 libgl1-mesa-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libasound2-dev libpulse-dev
+        sudo apt install -y build-essential cmake wget libfuse2 libgl1-mesa-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libasound2-dev libpulse-dev libxcb-cursor0
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
