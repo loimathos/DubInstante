@@ -1,61 +1,41 @@
-# DubInstante - Professional Video Dubbing Studio
+# DubInstante
+Studio de doublage open-source / Open-source dubbing studio
 
-**DubInstante** is a professional video dubbing software designed to be powerful, intuitive, and visually refined.
-[![Build and Release](https://github.com/loinstante/DubInstante/actions/workflows/main.yml/badge.svg)](https://github.com/loinstante/DubInstante/actions/workflows/main.yml)
+**FR:** DubInstante est un studio de doublage open-source conçu pour offrir des performances professionnelles.
+**EN:** DubInstante is an open-source dubbing studio designed to deliver professional performance.
 
-## 📚 Documentation
+## Piliers de Fonctionnalités / Feature Pillars
 
-- 🇫🇷 [Documentation complète en Français](docs/fr/README.md)
-- 🇬🇧 [Full Documentation in English](docs/en/README.md)
-- 🍎 **macOS Help:** [How to launch on Mac](docs/en/README.md#macos) / [Lancer sur Mac](docs/fr/README.md#macos)
+### Performance & Audio
+**FR:** Moteur N-pistes, support de fichiers 50GB+, gestion des projets via les formats .dbi et ZIP, export via FFmpeg (sans recompression).
+**EN:** N-track engine, 50GB+ file support, project management via .dbi and ZIP formats, FFmpeg export (without recompression).
 
-```markdown
-### 🚀 Installation
+### Bande Rythmo & Synchronisation / Rythmo Band & Synchronization
+**FR:** Jusqu'à 4 bandes dynamiques, personnalisation avancée (polices/couleurs), navigation image par image.
+**EN:** Up to 4 dynamic bands, advanced customization (fonts/colors), frame-by-frame navigation.
 
-- 📥 **Download / Téléchargement** : [GitHub Releases](../../releases)
-- 🛠️ **Build / Compilation** : [Instructions](build/)
-```
+### Compatibilité / Compatibility
+**FR:** Support multiplateforme (Windows, Mac, Linux, Android Native Beta).
+**EN:** Cross-platform support (Windows, Mac, Linux, Android Native Beta).
 
-### Key Features / Fonctionnalités Principales
+## Raccourcis / Shortcuts
 
-- 🎬 **Video Playback** / Lecture vidéo haute performance
-- 📝 **Dual Rythmo Bands** / Double bande rythmo
-- ⚡ **High Performance** / Support des fichiers massifs (50GB+)
-- 🎙️ **Multi-Track Recording** / Enregistrement multipiste
-- 💾 **Project Save/Load** / Sauvegarde et chargement de projets (.dbi + ZIP)
-- 🎨 **Modern UI** / Interface moderne et professionnelle
-- �️ **Rythmo Customization** / Personnalisation avancée des bandes rythmo (polices, couleurs, préréglages)
-- �📤 **Export** / Exportation FFmpeg
-- 📱 **Android Support** / Application Native Android (Beta)
+| Action (FR) | Action (EN) | Raccourci / Shortcut |
+|---|---|---|
+| Lecture / Pause | Play / Pause | `Espace` / `Space` |
+| Arrêt de l'enregistrement | Stop recording | `Ctrl+S` |
+| Insérer espace & lecture | Insert space & play | `Esc` / `Échap` |
+| Navigation image par image | Frame-by-frame navigation | `←` / `→` |
 
-### Keyboard Shortcuts / Raccourcis Clavier
+## Historique & Feuille de Route / Development History & Roadmap
+**FR:** Le développement de DubInstante est documenté par un historique de versions continu, marquant notre progression vers la première version stable.
+**EN:** DubInstante's development is documented through a continuous version history, marking our progress toward the first stable release.
 
-- **Space** / **Espace**: Play / Pause
-- **Ctrl+S**: Stop Recording / Arrêter l'enregistrement
-- **Esc** / **Échap**: Insert space & play / Insérer espace & lecture
-- **← / →**: Frame navigation / Navigation image par image
+- ✅ **v0.4.0 - v0.9.0:** Gestion de projet .dbi, support plein écran, beta Android, personnalisation de la rythmo / .dbi project management, fullscreen support, Android beta, rythmo customization.
+- ✅ **v0.10.0:** 4 bandes rythmo / 4 rythmo bands.
+- ✅ **v0.11.0:** Refonte UI / UI Overhaul.
+- 🚀 **v1.0.0:** Version Stable & Multiplateforme / Stable & Cross-platform release.
 
-## License / Licence
-
-This project is licensed under the **European Union Public Licence v. 1.2 (EUPL-1.2)** - see the [LICENSE](LICENSE) file for details.
-Ce projet est sous licence **European Union Public Licence v. 1.2 (EUPL-1.2)** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-Open-source - Contributions welcome! / Contributions bienvenues!
-
----
-
-**DubInstante** - Making professional video dubbing accessible to everyone.
-**DubInstante** - Rendre le doublage vidéo professionnel accessible à tous.
-
-## 🗺️ Roadmap
-- **v0.4.0**: ✅ Project Management System / Gestion de Projet (.dbi + ZIP)
-- **v0.5.0**: ✅ Fullscreen Recording & Shortcuts / Enregistrement Plein Écran & Raccourcis
-- **v0.6.0**: ✅ Native Android App / Application Android Native (Beta)
-- **v0.7.0**: ❌ Online prototype with .dbi files possible (no beta avaible) / Prototype d'un site web avec prise en charge du .dbi
-- **v0.8.0**: ⏭️ Surprise for all of you / Surprise pour vous tous
-- **v0.9.0**: ✅ Customization & Independent Band Styling / Personnalisation & Styles de bandes
-- **v0.10.0**: 🛠️ Add 2 more rythmo band to acheive 4 like any other one in the market / Ajoute de 2 bande rythmo supplementaire afin d'en avoir 4 comme les autres sur le marché
-- **v0.11.0**: UI Remake for better useability / Refonte de l'interface utilisateur pour une meilleure utilisabilité
-- **V1**: Stable launch on every platform possible with many surprises / Lancement d'une application stable toutes platforme
-- **+** User-driven features! / Des idées d'utilisateurs bienvenues !
-
+## Contribution / User-driven features
+**FR:** Le développement de DubInstante est dicté par vos retours ! Aidez-nous à améliorer le logiciel en signalant des bugs ou en proposant de nouvelles fonctionnalités via nos [GitHub Issues](https://github.com/loimathos/DubInstante/issues).
+**EN:** DubInstante's development is driven by your feedback! Help us improve the software by reporting bugs or suggesting new features via our [GitHub Issues](https://github.com/loimathos/DubInstante/issues).
