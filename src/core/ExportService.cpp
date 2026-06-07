@@ -194,11 +194,31 @@ QStringList ExportService::buildFFmpegArgs(const ExportConfig &config) const
         if (!extraPath.isEmpty()) extraCount++;
     }
     
-    // Video encoding
-    args << "-c:v" << "libx264";
-    args << "-preset" << (config.speedPreset.isEmpty() ? "medium" : config.speedPreset);
-    args << "-crf" << QString::number(config.crf >= 0 ? config.crf : 21);
-    args << "-pix_fmt" << "yuv420p";
+    if (config.expertMode) {
+        // Video Codec
+        args << "-c:v" << config.videoCodec;
+        if (config.videoCodec != "copy") {
+            if (!config.speedPreset.isEmpty()) {
+                args << "-preset" << config.speedPreset;
+            }
+            if (config.videoBitrateMbps > 0) {
+                args << "-b:v" << QString("%1M").arg(config.videoBitrateMbps);
+            } else {
+                args << "-crf" << QString::number(config.crf >= 0 ? config.crf : 21);
+            }
+            if (config.videoCodec == "prores") {
+                args << "-pix_fmt" << "yuv422p";
+            } else {
+                args << "-pix_fmt" << "yuv420p";
+            }
+        }
+    } else {
+        // Video encoding (Standard)
+        args << "-c:v" << "libx264";
+        args << "-preset" << (config.speedPreset.isEmpty() ? "medium" : config.speedPreset);
+        args << "-crf" << QString::number(config.crf >= 0 ? config.crf : 21);
+        args << "-pix_fmt" << "yuv420p";
+    }
     
     // Scale resolution if specified
     if (!config.scaleResolution.isEmpty()) {
@@ -238,20 +258,37 @@ QStringList ExportService::buildFFmpegArgs(const ExportConfig &config) const
     args << "-map" << "0:v:0";
     args << "-map" << "[aout]";
     
-    // Select audio encoder based on format
-    QString fmt = config.format.toLower();
-    if (fmt == "avi") {
-        args << "-c:a" << "libmp3lame";
+    if (config.expertMode) {
+        // Audio Codec
+        args << "-c:a" << config.audioCodec;
+        if (config.audioCodec != "copy" && !config.audioCodec.startsWith("pcm")) {
+            args << "-b:a" << QString("%1k").arg(config.audioBitrateKbps > 0 ? config.audioBitrateKbps : 192);
+        }
+        if (config.sampleRateHz > 0) {
+            args << "-ar" << QString::number(config.sampleRateHz);
+        }
     } else {
-        args << "-c:a" << "aac";
+        // Select audio encoder based on format (Standard)
+        QString fmt = config.format.toLower();
+        if (fmt == "avi") {
+            args << "-c:a" << "libmp3lame";
+        } else {
+            args << "-c:a" << "aac";
+        }
+        args << "-b:a" << QString("%1k").arg(config.audioBitrateKbps > 0 ? config.audioBitrateKbps : 192);
     }
-    args << "-b:a" << QString("%1k").arg(config.audioBitrateKbps > 0 ? config.audioBitrateKbps : 192);
     
     // Duration limit
     if (config.durationMs > 0) {
         args << "-t" << QString::number(config.durationMs / 1000.0, 'f', 3);
     } else {
         args << "-shortest";
+    }
+    
+    // Custom FFmpeg Flags (Expert Mode)
+    if (config.expertMode && !config.customFFmpegFlags.trimmed().isEmpty()) {
+        QStringList customFlags = config.customFFmpegFlags.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
+        args << customFlags;
     }
     
     args << config.outputPath;

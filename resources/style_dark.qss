@@ -726,3 +726,39 @@ QDialog#globalSettingsDialog QPushButton#settingsCancelButton:hover {
 QDialog#globalSettingsDialog QPushButton#settingsCancelButton:pressed {
     background: #2a2a3c;
 }
+
+/* Tab Widget Styling for Export Dialog */
+QTabWidget#expertTabWidget::pane {
+    border: 1px solid #2a2a3c;
+    border-radius: 10px;
+    background: #161622;
+}
+
+QTabWidget#expertTabWidget QTabBar::tab {
+    background: #0d0d12;
+    color: #8a8a9e;
+    padding: 6px 12px;
+    border: 1px solid #2a2a3c;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+QTabWidget#expertTabWidget QTabBar::tab:selected {
+    background: #161622;
+    color: #a185ff;
+    border: 1px solid #2a2a3c;
+    border-bottom: 1px solid #161622;
+}
+
+QTabWidget#expertTabWidget QTabBar::tab:hover:!selected {
+    background: #212130;
+    color: #f3f3f6;
+}
+
+QTabWidget#expertTabWidget QWidget {
+    background: #161622;
+}

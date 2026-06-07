@@ -683,5 +683,41 @@ QDialog#trackSettingsDialog QPushButton#settingsCloseButton:hover {
 }
 
 QDialog#trackSettingsDialog QPushButton#settingsCloseButton:pressed {
-    background: #5627bb;
+    background: #6c46e0;
+}
+
+/* Tab Widget Styling for Export Dialog (Light Theme) */
+QTabWidget#expertTabWidget::pane {
+    border: 1px solid #e9e9ed;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+QTabWidget#expertTabWidget QTabBar::tab {
+    background: #fafafb;
+    color: #7a7a85;
+    padding: 6px 12px;
+    border: 1px solid #e9e9ed;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+QTabWidget#expertTabWidget QTabBar::tab:selected {
+    background: #ffffff;
+    color: #5627bb;
+    border: 1px solid #e9e9ed;
+    border-bottom: 1px solid #ffffff;
+}
+
+QTabWidget#expertTabWidget QTabBar::tab:hover:!selected {
+    background: #f4f4f6;
+    color: #121217;
+}
+
+QTabWidget#expertTabWidget QWidget {
+    background: #ffffff;
 }

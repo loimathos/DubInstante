@@ -12,6 +12,7 @@
 #include <QSlider>
 #include <QVector>
 #include <QVBoxLayout>
+#include <QTabWidget>
 
 class ExportDialog : public QDialog {
     Q_OBJECT
@@ -38,6 +39,13 @@ private slots:
     void onVolumeSliderChanged(int value);
     void onMuteToggled();
 
+    // Expert Mode slots
+    void onResolutionSelectionChanged(int index);
+    void onRateControlSelectionChanged(int index);
+    void onCustomResolutionWidthChanged(int width);
+    void onCustomResolutionHeightChanged(int height);
+    void onCodecChanged();
+
 private:
     void setupUi();
     void populateFields();
@@ -55,21 +63,53 @@ private:
     QVector<float> m_defaultTrackVolumes;
     QVector<bool> m_defaultTrackMutes;
 
+    // Track original size to calculate custom resolution aspect ratio
+    int m_videoOriginalWidth;
+    int m_videoOriginalHeight;
+    float m_videoAspectRatio;
+    bool m_updatingCustomRes;
+
     // UI Components
     QLineEdit *m_outputPathEdit;
     QPushButton *m_browseButton;
     
+    QCheckBox *m_advancedCheck;
+    QLabel *m_warningLabel;
+
+    // Dual Interface Containers
+    QWidget *m_basicWidget;
+    QTabWidget *m_expertWidget;
+
+    // 1. Basic Widgets
     QComboBox *m_formatCombo;
     QComboBox *m_resolutionCombo;
     QComboBox *m_videoQualityCombo;
     QComboBox *m_audioQualityCombo;
     QComboBox *m_rangeCombo;
     
-    QCheckBox *m_advancedCheck;
-    QWidget *m_advancedContainer;
-    QSpinBox *m_customCrfSpin;
-    QSpinBox *m_customBitrateSpin;
-    QLabel *m_warningLabel;
+    // 2. Expert Widgets
+    QComboBox *m_expFormatCombo;
+    QComboBox *m_expVideoCodecCombo;
+    QComboBox *m_expAudioCodecCombo;
+    
+    QComboBox *m_expResolutionCombo;
+    QWidget *m_expCustomResContainer;
+    QSpinBox *m_customWidthSpin;
+    QSpinBox *m_customHeightSpin;
+    QCheckBox *m_aspectLockCheck;
+    
+    QComboBox *m_expRateControlCombo;
+    QWidget *m_expCrfContainer;
+    QSlider *m_expCrfSlider;
+    QLabel *m_expCrfPercentLabel;
+    
+    QWidget *m_expBitrateContainer;
+    QSpinBox *m_expBitrateSpin;
+    
+    QComboBox *m_expPresetCombo;
+    QSpinBox *m_expAudioBitrateSpin;
+    QComboBox *m_expSampleRateCombo;
+    QLineEdit *m_expCustomFlagsEdit;
 
     // Audio mixing panel
     QVBoxLayout *m_audioTracksLayout;

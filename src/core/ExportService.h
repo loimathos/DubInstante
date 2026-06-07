@@ -40,6 +40,14 @@ struct ExportConfig {
     int audioBitrateKbps;           ///< Audio bitrate in kbps (default 192)
     QString format;                 ///< Container format: e.g., "mp4", "mkv", "mov", "avi"
     
+    // Expert Mode fields
+    bool expertMode;                ///< Whether to use manual expert settings
+    QString videoCodec;             ///< Video encoder: e.g., "libx264", "libx265", "prores", "libvpx-vp9", "copy"
+    QString audioCodec;             ///< Audio encoder: e.g., "aac", "libmp3lame", "ac3", "pcm_s16le", "pcm_s24le", "copy"
+    int videoBitrateMbps;           ///< Video target bitrate in Mbps (0 for CRF mode)
+    int sampleRateHz;               ///< Audio sample rate in Hz (0 for original)
+    QString customFFmpegFlags;      ///< Raw extra FFmpeg arguments
+    
     ExportConfig()
         : durationMs(-1)
         , startTimeMs(0)
@@ -48,6 +56,11 @@ struct ExportConfig {
         , crf(21)
         , audioBitrateKbps(192)
         , format("mp4")
+        , expertMode(false)
+        , videoCodec("libx264")
+        , audioCodec("aac")
+        , videoBitrateMbps(0)
+        , sampleRateHz(0)
     {}
 };
 
