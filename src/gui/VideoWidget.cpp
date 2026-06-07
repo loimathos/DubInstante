@@ -54,6 +54,9 @@ void VideoWidget::paintEvent(QPaintEvent *event)
     Q_UNUSED(event)
     
     QPainter painter(this);
+    if (!painter.isActive()) {
+        return;
+    }
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
     
     if (!m_currentImage.isNull()) {

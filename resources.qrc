@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/style.qss</file>
+        <file>resources/style_dark.qss</file>
     <file>resources/icons/play.svg</file>
     <file>resources/icons/pause.svg</file>
     <file>resources/icons/stop.svg</file>

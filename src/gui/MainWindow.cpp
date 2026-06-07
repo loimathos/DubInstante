@@ -17,7 +17,13 @@
 #include "RythmoOverlay.h"
 #include "TrackWidget.h"
 #include "TrackSettingsDialog.h"
+#include "GlobalSettingsDialog.h"
+#include "../core/SettingsManager.h"
 #include "VideoWidget.h"
+#include <QStyleHints>
+#include <QGuiApplication>
+#include <QMediaDevices>
+#include <QAudioDevice>
 
 // Utils includes
 #include "TimeFormatter.h"
@@ -51,8 +57,13 @@ MainWindow::MainWindow(QWidget *parent)
       ,
       m_trackCount(0), m_previousVolume(100), m_isRecording(false),
       m_isFullscreenRecording(false), m_lastRecordedDurationMs(0),
-      m_recordingStartTimeMs(0) {
-  loadStylesheet();
+      m_recordingStartTimeMs(0),
+      m_autoSaveTimer(new QTimer(this)),
+      m_countdownTimer(new QTimer(this)),
+      m_countdownRemaining(0),
+      m_countdownLabel(nullptr),
+      m_outputDevicesGroup(new QActionGroup(this)) {
+  applyTheme();
   setupUi();
   createMenus();
   setupConnections();
@@ -61,8 +72,35 @@ MainWindow::MainWindow(QWidget *parent)
   // Connect video sink
   m_playbackEngine->setVideoSink(m_videoWidget->videoSink());
 
+  // Setup auto-save connection & configure timer
+  connect(m_autoSaveTimer, &QTimer::timeout, this, &MainWindow::onAutoSaveTriggered);
+  if (SettingsManager::instance().autoSaveEnabled()) {
+    m_autoSaveTimer->start(SettingsManager::instance().autoSaveInterval() * 60 * 1000);
+  }
+
+  // Setup countdown connection
+  connect(m_countdownTimer, &QTimer::timeout, this, &MainWindow::onCountdownTick);
+
+  // Restore Expert Mode checkbox
+  m_actionExpertMode->setChecked(SettingsManager::instance().expertMode());
+
   // Create initial track (always start with 1)
   setTrackCount(1);
+
+  // Restore preferred active audio output device
+  QString activeProfile = SettingsManager::instance().activeOutputProfile();
+  if (!activeProfile.isEmpty()) {
+    QStringList parts = activeProfile.split("|");
+    if (parts.size() >= 2) {
+      QString devDesc = parts[1];
+      for (const QAudioDevice &device : QMediaDevices::audioOutputs()) {
+        if (device.description() == devDesc) {
+          m_playbackEngine->setAudioDevice(device);
+          break;
+        }
+      }
+    }
+  }
 
   // Window configuration
   setWindowTitle("DubInstante - Studio");
@@ -75,8 +113,21 @@ MainWindow::MainWindow(QWidget *parent)
 // UI Setup
 // =============================================================================
 
-void MainWindow::loadStylesheet() {
-  QFile styleFile(":/resources/style.qss");
+void MainWindow::applyTheme() {
+  SettingsManager &sm = SettingsManager::instance();
+  QString themeMode = sm.theme();
+  
+  bool isDark = false;
+  if (themeMode == "dark") {
+    isDark = true;
+  } else if (themeMode == "system") {
+    QPalette pal = QGuiApplication::palette();
+    isDark = (pal.color(QPalette::Window).value() < 128);
+  }
+
+  QString stylesheetPath = isDark ? ":/resources/style_dark.qss" : ":/resources/style.qss";
+  
+  QFile styleFile(stylesheetPath);
   if (styleFile.open(QFile::ReadOnly)) {
     QString styleSheet = QLatin1String(styleFile.readAll());
     setStyleSheet(styleSheet);
@@ -419,6 +470,10 @@ void MainWindow::createMenus() {
   m_actionExportRythmo->setCheckable(true);
   rythmoMenu->addAction(m_actionExportRythmo);
 
+  // === Audio Menu ===
+  m_audioMenu = menuBar->addMenu(tr("Audio"));
+  updateAudioMenu();
+
   // === Account Menu (Right aligned) ===
   QMenuBar *rightMenuBar = new QMenuBar(menuBar);
   rightMenuBar->setObjectName("rightMenuBar");
@@ -648,6 +703,11 @@ void MainWindow::setupConnections() {
           &MainWindow::onExportProgress);
   connect(m_exportService, &ExportService::exportFinished, this,
           &MainWindow::onExportFinished);
+
+  connect(m_actionGlobalSettings, &QAction::triggered, this,
+          &MainWindow::onOpenGlobalSettings);
+  connect(m_outputDevicesGroup, &QActionGroup::triggered, this,
+          &MainWindow::onOutputDeviceTriggered);
 }
 
 // =============================================================================
@@ -678,6 +738,50 @@ void MainWindow::setTrackCount(int count) {
     m_trackPanels.append(panel);
     m_tracksLayout->addWidget(panel);
 
+    // Populate combo with real system audio devices
+    QList<QAudioDevice> devices = recorder->availableDevices();
+    panel->populateInputDevices(devices);
+
+    // Apply persistent/global microphone coupling
+    QString cachedMic = SettingsManager::instance().trackMicrophone(idx);
+    if (!cachedMic.isEmpty()) {
+      panel->setInputDevice(cachedMic);
+    } else {
+      QString defaultGlobalMic = SettingsManager::instance().defaultMicrophone();
+      if (!defaultGlobalMic.isEmpty()) {
+        panel->setInputDevice(defaultGlobalMic);
+      }
+    }
+
+    // Wire real-time audio level monitoring → VU meter
+    connect(recorder, &AudioRecorder::levelChanged, panel,
+            [panel](float level) {
+                panel->setVuLevel(static_cast<int>(level * 100.0f));
+            });
+
+    // Wire device selection: when user picks a device in the combo, switch recorder + monitoring
+    connect(panel, &TrackWidget::inputDeviceIndexChanged, this,
+            [this, idx](int deviceIndex) {
+                if (idx >= m_audioRecorders.size()) return;
+                AudioRecorder *rec = m_audioRecorders[idx];
+                QList<QAudioDevice> devs = rec->availableDevices();
+                
+                if (deviceIndex < 0 || deviceIndex >= devs.size()) {
+                    // "Aucune entrée" selected → stop monitoring
+                    rec->stopMonitoring();
+                    SettingsManager::instance().setTrackMicrophone(idx, "");
+                    return;
+                }
+                
+                QAudioDevice selectedDev = devs[deviceIndex];
+                rec->setDevice(selectedDev);
+                // setDevice already restarts monitoring if it was active,
+                // but start it if it wasn't
+                rec->startMonitoring();
+
+                SettingsManager::instance().setTrackMicrophone(idx, selectedDev.description());
+            });
+
     // Gear button → open settings dialog with this track selected
     connect(panel, &TrackWidget::optionsClicked, this, [this, idx]() {
       TrackSettingsDialog *dialog =
@@ -707,6 +811,7 @@ void MainWindow::setTrackCount(int count) {
 
     // Remove AudioRecorder
     AudioRecorder *recorder = m_audioRecorders.takeLast();
+    recorder->stopMonitoring();
     recorder->deleteLater();
 
     // Remove temp path
@@ -991,6 +1096,18 @@ void MainWindow::onPlaybackStateChanged(QMediaPlayer::PlaybackState state) {
 // =============================================================================
 
 void MainWindow::toggleRecording() {
+  if (m_countdownTimer->isActive()) {
+    // Cancel countdown
+    m_countdownTimer->stop();
+    if (m_countdownLabel) {
+      m_countdownLabel->hide();
+    }
+    m_recordButton->setEnabled(true);
+    m_recordButton->setChecked(false);
+    m_recordButton->setText("● REC GLOBAL");
+    return;
+  }
+
   if (!m_isRecording) {
     QString currentVideo = property("currentVideoPath").toString();
     if (currentVideo.isEmpty()) {
@@ -1000,30 +1117,44 @@ void MainWindow::toggleRecording() {
       return;
     }
 
-    m_playbackEngine->seek(0);
-    m_recordingStartTimeMs = m_playbackEngine->position();
-
-    // Start recording on all tracks
-    for (int i = 0; i < m_trackCount; ++i) {
-      m_audioRecorders[i]->startRecording(
-          QUrl::fromLocalFile(m_tempAudioPaths[i]));
+    int duration = SettingsManager::instance().countdownDuration();
+    if (duration > 0) {
+      m_countdownRemaining = duration;
+      
+      if (!m_countdownLabel) {
+        m_countdownLabel = new QLabel(m_videoFrame);
+        m_countdownLabel->setObjectName("countdownLabel");
+        m_countdownLabel->setAlignment(Qt::AlignCenter);
+        m_countdownLabel->setStyleSheet(
+            "QLabel#countdownLabel {"
+            "  color: #926bff;"
+            "  font-size: 80px;"
+            "  font-weight: bold;"
+            "  background-color: rgba(13, 13, 18, 0.75);"
+            "  border-radius: 20px;"
+            "}"
+        );
+      }
+      
+      int lblWidth = 160;
+      int lblHeight = 160;
+      m_countdownLabel->setGeometry(
+          (m_videoFrame->width() - lblWidth) / 2,
+          (m_videoFrame->height() - lblHeight) / 2,
+          lblWidth,
+          lblHeight
+      );
+      m_countdownLabel->setText(QString::number(m_countdownRemaining));
+      m_countdownLabel->show();
+      m_countdownLabel->raise();
+      
+      m_recordButton->setText("ANNULER");
+      m_recordButton->setChecked(true);
+      
+      m_countdownTimer->start(1000);
+    } else {
+      startRecordingProcess();
     }
-
-    // Enter fullscreen if action is checked
-    if (m_actionFullscreen->isChecked()) {
-      enterFullscreenRecording();
-    }
-
-    // Lock rythmo editing during recording
-    m_rythmoOverlay->setEditable(false);
-
-    m_playbackEngine->play();
-    m_recordingTimer.start();
-
-    m_isRecording = true;
-    m_recordButton->setText("STOP");
-    m_exportProgressBar->setVisible(false);
-    m_actionOpenMp4->setEnabled(false);
 
   } else {
     m_playbackEngine->pause();
@@ -1203,6 +1334,17 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
           m_rythmoOverlay->setGeometry(0, 0, frame->width(), frame->height());
           m_rythmoOverlay->raise();
         }
+        if (m_countdownLabel && m_countdownLabel->isVisible()) {
+          int lblWidth = 160;
+          int lblHeight = 160;
+          m_countdownLabel->setGeometry(
+              (frame->width() - lblWidth) / 2,
+              (frame->height() - lblHeight) / 2,
+              lblWidth,
+              lblHeight
+          );
+          m_countdownLabel->raise();
+        }
       }
     } else if (watched->objectName() == "fullscreenContainer" &&
                m_isFullscreenRecording) {
@@ -1268,4 +1410,221 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
   }
 
   QMainWindow::keyPressEvent(event);
+}
+
+// =============================================================================
+// Advanced Settings & Features Slots
+// =============================================================================
+
+void MainWindow::onOpenGlobalSettings() {
+  GlobalSettingsDialog dialog(this);
+  if (dialog.exec() == QDialog::Accepted) {
+    SettingsManager &sm = SettingsManager::instance();
+    
+    // Apply theme
+    applyTheme();
+    
+    // Update auto-save timer
+    m_autoSaveTimer->stop();
+    if (sm.autoSaveEnabled()) {
+      m_autoSaveTimer->start(sm.autoSaveInterval() * 60 * 1000);
+    }
+    
+    // Update expert mode action state
+    m_actionExpertMode->setChecked(sm.expertMode());
+    
+    // Update dynamic audio menu
+    updateAudioMenu();
+    
+    // Apply default global microphone to empty input devices
+    QString defaultMic = sm.defaultMicrophone();
+    if (!defaultMic.isEmpty()) {
+      for (int i = 0; i < m_trackCount; ++i) {
+        if (m_trackPanels[i]->currentInputDevice() == "Aucune entrée" || m_trackPanels[i]->currentInputDevice().isEmpty()) {
+          m_trackPanels[i]->setInputDevice(defaultMic);
+        }
+      }
+    }
+    
+    statusBar()->showMessage(tr("Paramètres mis à jour"), 3000);
+  }
+}
+
+void MainWindow::onAutoSaveTriggered() {
+  if (m_isRecording) {
+    return; // Don't auto-save during active recording to prevent performance issues
+  }
+
+  QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+  QDir dir(appDataPath);
+  if (!dir.exists()) {
+    dir.mkpath(".");
+  }
+
+  QString autosaveFile = dir.filePath("autosave_backup.dbi");
+
+  SaveData data;
+  data.videoUrl = property("currentVideoPath").toString();
+  data.videoVolume = m_playbackEngine->volume();
+  data.trackCount = m_trackCount;
+  data.scrollSpeed = m_speedSpinBox->value();
+  data.isTextWhite = m_textColorCheck->isChecked();
+
+  // Save audio tracks
+  for (int i = 0; i < m_trackCount; ++i) {
+    TrackAudioSaveData audioData;
+    audioData.audioInput = m_trackPanels[i]->currentInputDevice();
+    audioData.audioGain = m_trackPanels[i]->currentVolume() / 100.0f;
+    data.audioTracks.append(audioData);
+  }
+
+  // Save rythmo tracks
+  for (int i = 0; i < m_trackCount; ++i) {
+    TrackSaveData trackData;
+    trackData.text = m_rythmoManager->text(i);
+    trackData.style = m_rythmoManager->trackStyle(i);
+    data.tracks.append(trackData);
+  }
+
+  if (m_saveManager->save(autosaveFile, data)) {
+    statusBar()->showMessage(tr("Sauvegarde automatique cache effectuée"), 2000);
+  }
+}
+
+void MainWindow::onOutputDeviceTriggered(QAction *action) {
+  if (!action) return;
+
+  QString devDesc = action->data().toString();
+  QList<QAudioDevice> availableDevices = QMediaDevices::audioOutputs();
+  QAudioDevice targetDevice;
+
+  for (const QAudioDevice &device : availableDevices) {
+    if (device.description() == devDesc) {
+      targetDevice = device;
+      break;
+    }
+  }
+
+  if (targetDevice.isNull()) {
+    targetDevice = QMediaDevices::defaultAudioOutput();
+  }
+
+  m_playbackEngine->setAudioDevice(targetDevice);
+
+  // Update SettingsManager with currently active profile
+  SettingsManager &sm = SettingsManager::instance();
+  for (const QString &pref : sm.preferredOutputs()) {
+    QStringList parts = pref.split("|");
+    if (parts.size() >= 2 && parts[1] == devDesc) {
+      sm.setActiveOutputProfile(pref);
+      break;
+    }
+  }
+
+  statusBar()->showMessage(tr("Sortie audio : %1").arg(action->text()), 3000);
+}
+
+void MainWindow::updateAudioMenu() {
+  if (!m_audioMenu) return;
+
+  // Clear old actions safely from the group
+  for (QAction *action : m_outputDevicesGroup->actions()) {
+    m_outputDevicesGroup->removeAction(action);
+    action->deleteLater();
+  }
+
+  m_audioMenu->clear();
+
+  SettingsManager &sm = SettingsManager::instance();
+  QStringList preferred = sm.preferredOutputs();
+  QString activeProfile = sm.activeOutputProfile();
+
+  if (preferred.isEmpty()) {
+    QAction *emptyAction = m_audioMenu->addAction(tr("Aucun profil configuré"));
+    emptyAction->setEnabled(false);
+  } else {
+    for (const QString &pref : preferred) {
+      QStringList parts = pref.split("|");
+      if (parts.size() >= 2) {
+        QString label = parts[0];
+        QString devDesc = parts[1];
+
+        QAction *action = new QAction(QString("%1 (%2)").arg(label, devDesc), m_audioMenu);
+        action->setCheckable(true);
+        action->setData(devDesc);
+
+        m_audioMenu->addAction(action);
+        m_outputDevicesGroup->addAction(action);
+
+        if (pref == activeProfile) {
+          action->setChecked(true);
+        }
+      }
+    }
+  }
+
+  m_audioMenu->addSeparator();
+  QAction *configAction = m_audioMenu->addAction(tr("Gérer les sorties..."));
+  connect(configAction, &QAction::triggered, this, &MainWindow::onOpenGlobalSettings);
+}
+
+// =============================================================================
+// Countdown Pre-Roll
+// =============================================================================
+
+void MainWindow::onCountdownTick() {
+  m_countdownRemaining--;
+  if (m_countdownRemaining > 0) {
+    m_countdownLabel->setText(QString::number(m_countdownRemaining));
+  } else {
+    m_countdownTimer->stop();
+    if (m_countdownLabel) {
+      m_countdownLabel->hide();
+    }
+    m_recordButton->setEnabled(true);
+    startRecordingProcess();
+  }
+}
+
+void MainWindow::startRecordingProcess() {
+  m_playbackEngine->seek(0);
+  m_recordingStartTimeMs = m_playbackEngine->position();
+
+  // Start recording on all tracks
+  for (int i = 0; i < m_trackCount; ++i) {
+    m_audioRecorders[i]->startRecording(
+        QUrl::fromLocalFile(m_tempAudioPaths[i]));
+  }
+
+  // Enter fullscreen if action is checked
+  if (m_actionFullscreen->isChecked()) {
+    enterFullscreenRecording();
+  }
+
+  // Lock rythmo editing during recording
+  m_rythmoOverlay->setEditable(false);
+
+  m_playbackEngine->play();
+  m_recordingTimer.start();
+
+  m_isRecording = true;
+  m_recordButton->setEnabled(true);
+  m_recordButton->setChecked(true);
+  m_recordButton->setText("STOP");
+  m_exportProgressBar->setVisible(false);
+  m_actionOpenMp4->setEnabled(false);
+}
+
+void MainWindow::changeEvent(QEvent *event) {
+  if (event->type() == QEvent::PaletteChange) {
+    if (SettingsManager::instance().theme() == "system") {
+      static bool isApplyingTheme = false;
+      if (!isApplyingTheme) {
+        isApplyingTheme = true;
+        applyTheme();
+        isApplyingTheme = false;
+      }
+    }
+  }
+  QMainWindow::changeEvent(event);
 }

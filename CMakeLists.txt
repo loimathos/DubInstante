@@ -71,6 +71,8 @@ set(CORE_SOURCES
     src/core/ExportService.cpp
     src/core/SaveManager.h
     src/core/SaveManager.cpp
+    src/core/SettingsManager.h
+    src/core/SettingsManager.cpp
 )
 
 # GUI Layer - User Interface (passive widgets)
@@ -83,10 +85,14 @@ set(GUI_SOURCES
     src/gui/RythmoWidget.cpp
     src/gui/RythmoOverlay.h
     src/gui/RythmoOverlay.cpp
+    src/gui/AudioMeterWidget.h
+    src/gui/AudioMeterWidget.cpp
     src/gui/TrackWidget.h
     src/gui/TrackWidget.cpp
     src/gui/TrackSettingsDialog.h
     src/gui/TrackSettingsDialog.cpp
+    src/gui/GlobalSettingsDialog.h
+    src/gui/GlobalSettingsDialog.cpp
     src/gui/ClickableSlider.h
 )
 

@@ -48,6 +48,10 @@ void PlaybackEngine::setVideoSink(QVideoSink *sink) {
   m_mediaPlayer->setVideoOutput(sink);
 }
 
+void PlaybackEngine::setAudioDevice(const QAudioDevice &device) {
+  m_audioOutput->setDevice(device);
+}
+
 void PlaybackEngine::openFile(const QUrl &url) {
   m_mediaPlayer->setSource(url);
   m_currentFilePath = url.toLocalFile();

@@ -14,6 +14,8 @@
 
 #include <QCheckBox>
 #include <QElapsedTimer>
+#include <QTimer>
+#include <QActionGroup>
 #include <QFrame>
 #include <QKeyEvent>
 #include <QLabel>
@@ -77,6 +79,7 @@ protected:
   bool eventFilter(QObject *watched, QEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
   void resizeEvent(QResizeEvent *event) override;
+  void changeEvent(QEvent *event) override;
 
 private slots:
   // File operations
@@ -98,6 +101,17 @@ private slots:
 
   // Error handling
   void onError(const QString &errorMessage);
+
+  // Global settings & features
+  void onOpenGlobalSettings();
+  void onAutoSaveTriggered();
+  void onOutputDeviceTriggered(QAction *action);
+  void applyTheme();
+  void updateAudioMenu();
+  
+  // Countdown
+  void onCountdownTick();
+  void startRecordingProcess();
 
 private:
   void setupUi();
@@ -190,6 +204,16 @@ private:
   QElapsedTimer m_recordingTimer;
   qint64 m_lastRecordedDurationMs;
   qint64 m_recordingStartTimeMs;
+
+  // Advanced settings members
+  QTimer *m_autoSaveTimer;
+  QMenu *m_audioMenu;
+  QActionGroup *m_outputDevicesGroup;
+
+  // Countdown overlay members
+  QLabel *m_countdownLabel;
+  QTimer *m_countdownTimer;
+  int m_countdownRemaining;
 };
 
 #endif // MAINWINDOW_H

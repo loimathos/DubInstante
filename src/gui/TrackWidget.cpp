@@ -1,4 +1,5 @@
 #include "TrackWidget.h"
+#include "AudioMeterWidget.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGraphicsDropShadowEffect>
@@ -63,8 +64,6 @@ void TrackWidget::setupUi(const QString& title, const QString& badgeColor)
     m_inputCombo = new QComboBox(this);
     m_inputCombo->setProperty("cssClass", "track-control-select");
     m_inputCombo->addItem("Aucune entrée");
-    m_inputCombo->addItem("Microphone");
-    m_inputCombo->addItem("Line In");
 
     inLayout->addWidget(inLabel);
     inLayout->addWidget(m_inputCombo, 1);
@@ -93,33 +92,8 @@ void TrackWidget::setupUi(const QString& title, const QString& badgeColor)
     mainLayout->addStretch();
 
     // --- VU Meter ---
-    QFrame *vuContainer = new QFrame(this);
-    vuContainer->setProperty("cssClass", "track-vu");
-    vuContainer->setMinimumHeight(18);
-    QVBoxLayout *vuLayout = new QVBoxLayout(vuContainer);
-    vuLayout->setContentsMargins(6, 6, 6, 6);
-    vuLayout->setSpacing(0);
-
-    m_vuMeterBg = new QFrame(vuContainer);
-    m_vuMeterBg->setProperty("cssClass", "vu-bg");
-    m_vuMeterBg->setFixedHeight(5);
-    
-    QHBoxLayout *bgLayout = new QHBoxLayout(m_vuMeterBg);
-    bgLayout->setContentsMargins(0, 0, 0, 0);
-    bgLayout->setSpacing(0);
-
-    m_vuMeterFill = new QFrame(m_vuMeterBg);
-    m_vuMeterFill->setProperty("cssClass", "vu-fill");
-    
-    bgLayout->addWidget(m_vuMeterFill);
-    bgLayout->addStretch();
-    
-    // Default val
-    bgLayout->setStretch(0, 0);
-    bgLayout->setStretch(1, 100);
-
-    vuLayout->addWidget(m_vuMeterBg);
-    mainLayout->addWidget(vuContainer);
+    m_vuMeter = new AudioMeterWidget(this);
+    mainLayout->addWidget(m_vuMeter);
 
     // --- Color Badge ---
     QHBoxLayout *badgeLayout = new QHBoxLayout();
@@ -145,6 +119,13 @@ void TrackWidget::setupConnections()
     connect(m_volumeSlider, &QSlider::valueChanged, this, &TrackWidget::onVolumeSliderChanged);
     connect(m_optionsButton, &QPushButton::clicked, this, &TrackWidget::optionsClicked);
     connect(m_inputCombo, &QComboBox::currentTextChanged, this, &TrackWidget::inputSelected);
+    
+    // Emit device index when selection changes (index 0 = "Aucune entrée", real devices start at 1)
+    connect(m_inputCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
+                // deviceIndex = index - 1 (to skip "Aucune entrée" at pos 0)
+                emit inputDeviceIndexChanged(index - 1);
+            });
 }
 
 void TrackWidget::onVolumeSliderChanged(int value)
@@ -154,11 +135,8 @@ void TrackWidget::onVolumeSliderChanged(int value)
 
 void TrackWidget::setVuLevel(int percentage)
 {
-    int clamped = qBound(0, percentage, 100);
-    QHBoxLayout* bgLayout = qobject_cast<QHBoxLayout*>(m_vuMeterBg->layout());
-    if (bgLayout) {
-        bgLayout->setStretch(0, clamped);
-        bgLayout->setStretch(1, 100 - clamped);
+    if (m_vuMeter) {
+        m_vuMeter->setLevel(percentage / 100.0f);
     }
 }
 
@@ -174,4 +152,15 @@ void TrackWidget::setVolume(int volume)
 {
     int clamped = qBound(0, volume, 100);
     m_volumeSlider->setValue(clamped);
+}
+
+void TrackWidget::populateInputDevices(const QList<QAudioDevice> &devices)
+{
+    m_inputCombo->blockSignals(true);
+    m_inputCombo->clear();
+    m_inputCombo->addItem("Aucune entrée");
+    for (const QAudioDevice &dev : devices) {
+        m_inputCombo->addItem(dev.description());
+    }
+    m_inputCombo->blockSignals(false);
 }

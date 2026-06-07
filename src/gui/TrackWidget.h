@@ -7,6 +7,7 @@
 #include <QComboBox>
 #include <QSlider>
 #include <QFrame>
+#include <QAudioDevice>
 
 class TrackWidget : public QFrame {
     Q_OBJECT
@@ -17,6 +18,7 @@ public:
 
     int trackIndex() const { return m_trackIndex; }
     void setVuLevel(int percentage); // 0 to 100
+    void populateInputDevices(const QList<QAudioDevice> &devices);
     
     QString currentInputDevice() const { return m_inputCombo->currentText(); }
     int currentVolume() const { return m_volumeSlider->value(); }
@@ -26,6 +28,7 @@ public:
 signals:
     void optionsClicked();
     void inputSelected(const QString& inputName);
+    void inputDeviceIndexChanged(int deviceIndex);
     void volumeChanged(int volume);
 
 private slots:
@@ -43,9 +46,8 @@ private:
     QComboBox *m_inputCombo;
     QSlider *m_volumeSlider;
     
-    // Custom VU Meter simply rendered with layouts and frames
-    QFrame *m_vuMeterBg;
-    QFrame *m_vuMeterFill;
+    // Custom VU Meter
+    class AudioMeterWidget *m_vuMeter;
 };
 
 #endif // TRACKWIDGET_H

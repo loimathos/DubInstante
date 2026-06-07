@@ -12,6 +12,7 @@
 #ifndef PLAYBACKENGINE_H
 #define PLAYBACKENGINE_H
 
+#include <QAudioDevice>
 #include <QAudioOutput>
 #include <QMediaPlayer>
 #include <QObject>
@@ -60,6 +61,12 @@ public:
      * @param sink QVideoSink from a VideoWidget or similar receiver.
      */
     void setVideoSink(QVideoSink *sink);
+    
+    /**
+     * @brief Sets the audio output device to use.
+     * @param device The device to use for playback.
+     */
+    void setAudioDevice(const QAudioDevice &device);
     
     /**
      * @brief Opens a media file for playback.

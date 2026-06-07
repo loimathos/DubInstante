@@ -1,0 +1,714 @@
+/* ========================================================================= */
+/* style_dark.qss - DubInstante 2026 Dark UI — Purple-led Design System     */
+/* ========================================================================= */
+
+/* Tokens (from dubinstante-design-system dark palette)
+   bg:             #0d0d12
+   surface:        #161622
+   surface-sunk:   #212130
+   surface-hover:  #212130
+   fg1:            #f3f3f6
+   fg2:            #b5b5c6
+   fg3:            #8a8a9e
+   fg4:            #5c5c6f
+   border:         #2a2a3c
+   border-strong:  #3b3b52
+   border-focus:   #a185ff
+   accent:         #926bff
+   accent-hover:   #a185ff
+   accent-press:   #7c56f5
+   accent-soft:    #1e1b33
+   accent-soft-2:  #2d2757
+   on-accent:      #ffffff
+   danger:         #ff4d66
+   danger-bg:      #2c1216
+   success:        #12c582
+   warning:        #f3a400
+*/
+
+QWidget {
+    font-family: "Inter Tight", "Segoe UI", "SF Pro Text", sans-serif;
+    color: #f3f3f6;
+}
+
+QMainWindow,
+QWidget#CentralWidget {
+    background-color: #0d0d12;
+}
+
+/* Top menu */
+QMenuBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #0d0d12,
+                                stop:1 #161622);
+    border: none;
+    border-bottom: 1px solid #2a2a3c;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #b5b5c6;
+}
+
+QMenuBar::item {
+    background: transparent;
+    color: #b5b5c6;
+    padding: 6px 11px;
+    margin: 0 2px;
+    border-radius: 8px;
+}
+
+QMenuBar::item:selected {
+    background: #212130;
+    color: #f3f3f6;
+}
+
+QMenuBar::item:pressed {
+    background: #2a2a3c;
+    color: #f3f3f6;
+}
+
+QMenuBar#rightMenuBar {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+QMenuBar#rightMenuBar::item {
+    color: #8a8a9e;
+    padding: 6px 10px;
+    margin: 0;
+    border-radius: 8px;
+}
+
+QMenuBar#rightMenuBar::item:selected {
+    background: #212130;
+    color: #f3f3f6;
+}
+
+QMenu {
+    background: #161622;
+    color: #f3f3f6;
+    border: 1px solid #2a2a3c;
+    border-radius: 10px;
+    padding: 6px;
+}
+
+QMenu::item {
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background: #1e1b33;
+    color: #a185ff;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #2a2a3c;
+    margin: 4px 2px;
+}
+
+QMenu QWidget {
+    background: #161622;
+    color: #f3f3f6;
+}
+
+QMenu QLabel {
+    background: transparent;
+    color: #8a8a9e;
+}
+
+QMenu QPushButton {
+    background: #0d0d12;
+    color: #b5b5c6;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    min-height: 28px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QMenu QPushButton:hover {
+    background: #212130;
+    border: 1px solid #3b3b52;
+}
+
+QMenu QPushButton:pressed {
+    background: #2a2a3c;
+}
+
+QWidget#accountPanel {
+    background: #161622;
+}
+
+QLineEdit#accountEmailInput,
+QLineEdit#accountPasswordInput {
+    background: #161622;
+    color: #f3f3f6;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    min-height: 28px;
+    padding: 4px 10px;
+}
+
+QLineEdit#accountEmailInput:focus,
+QLineEdit#accountPasswordInput:focus {
+    border: 1px solid #926bff;
+}
+
+QPushButton#accountLoginButton {
+    background: #926bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    min-height: 30px;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+QPushButton#accountLoginButton:hover {
+    background: #a185ff;
+}
+
+QPushButton#accountLoginButton:pressed {
+    background: #7c56f5;
+}
+
+/* Video area remains neutral and untouched structurally */
+QFrame#videoFrame {
+    background-color: #000000;
+    border: none;
+}
+
+/* Control panel */
+QWidget#controlBar {
+    background-color: #161622;
+    border: none;
+    border-radius: 10px;
+}
+
+QWidget#controlBar QLabel {
+    background: transparent;
+    color: #b5b5c6;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QLabel#timecodeLabel {
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    color: #a185ff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+QLabel[cssClass="control-label"] {
+    color: #8a8a9e;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Buttons: no hard borders on control surfaces */
+QWidget#controlBar QPushButton,
+QFrame[cssClass="track"] QPushButton {
+    border: none;
+    background: transparent;
+    color: #b5b5c6;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QWidget#controlBar QPushButton[class="btn"] {
+    background: transparent;
+    color: #b5b5c6;
+}
+
+QWidget#controlBar QPushButton[class="btn"]:hover {
+    background: #212130;
+}
+
+QWidget#controlBar QPushButton[class="btn"]:pressed {
+    background: #2a2a3c;
+}
+
+QWidget#controlBar QPushButton[cssClass="stepButton"] {
+    background: #0d0d12;
+    color: #8a8a9e;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 28px;
+}
+
+QWidget#controlBar QPushButton[cssClass="stepButton"]:hover {
+    background: #212130;
+    border: 1px solid #3b3b52;
+    color: #f3f3f6;
+}
+
+QWidget#controlBar QPushButton[cssClass="stepButton"]:pressed {
+    background: #2a2a3c;
+}
+
+QWidget#controlBar QPushButton[cssClass="resetButton"] {
+    background: #2d2757;
+    color: #a185ff;
+    border: 1px solid #3b3b52;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+QWidget#controlBar QPushButton[cssClass="resetButton"]:hover {
+    background: #3b3b52;
+    border: 1px solid #926bff;
+}
+
+QWidget#controlBar QPushButton[cssClass="iconButton"] {
+    background: #0d0d12;
+    color: #8a8a9e;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    padding: 3px;
+}
+
+QWidget#controlBar QPushButton[cssClass="iconButton"]:hover {
+    background: #212130;
+    border: 1px solid #3b3b52;
+}
+
+QWidget#controlBar QPushButton#volumeMuteButton:checked {
+    background: #2c1216;
+    border: 1px solid #ff4d66;
+}
+
+QWidget#controlBar QPushButton#btnPlay,
+QWidget#controlBar QPushButton#btnPause {
+    background: #926bff;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 9px 14px;
+}
+
+QWidget#controlBar QPushButton#btnPlay:hover,
+QWidget#controlBar QPushButton#btnPause:hover {
+    background: #a185ff;
+}
+
+QWidget#controlBar QPushButton#btnPlay:pressed,
+QWidget#controlBar QPushButton#btnPause:pressed {
+    background: #7c56f5;
+}
+
+QWidget#controlBar QPushButton#btnStop {
+    background: #0d0d12;
+    color: #b5b5c6;
+    border: 1px solid #3b3b52;
+    border-radius: 10px;
+    padding: 9px 12px;
+}
+
+QWidget#controlBar QPushButton#btnStop:hover {
+    background: #212130;
+    border: 1px solid #5c5c6f;
+}
+
+QWidget#controlBar QPushButton#btnStop:pressed {
+    background: #2a2a3c;
+}
+
+QWidget#controlBar QPushButton#recordButton {
+    background: #2c1216;
+    color: #ff4d66;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+QWidget#controlBar QPushButton#recordButton:hover {
+    background: #3c1a1f;
+}
+
+QWidget#controlBar QPushButton#recordButton:checked {
+    background: #ff4d66;
+    color: #ffffff;
+}
+
+/* Inputs — hide built-in spinbox arrows */
+QSpinBox::up-button,
+QSpinBox::down-button,
+QDoubleSpinBox::up-button,
+QDoubleSpinBox::down-button {
+    width: 0;
+    border: none;
+}
+
+QSpinBox,
+QDoubleSpinBox,
+QComboBox {
+    background: #0d0d12;
+    color: #f3f3f6;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    min-height: 26px;
+    padding: 3px 10px;
+    font-size: 12px;
+}
+
+QSpinBox:hover,
+QDoubleSpinBox:hover,
+QComboBox:hover {
+    border: 1px solid #3b3b52;
+}
+
+QSpinBox:focus,
+QDoubleSpinBox:focus,
+QComboBox:focus {
+    border: 1px solid #926bff;
+    background: #161622;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox QAbstractItemView {
+    background: #161622;
+    color: #f3f3f6;
+    border: 1px solid #2a2a3c;
+    selection-background-color: #926bff;
+    selection-color: #ffffff;
+}
+
+QCheckBox {
+    color: #8a8a9e;
+    font-size: 11px;
+    spacing: 6px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #3b3b52;
+    border-radius: 4px;
+    background: #161622;
+}
+
+QCheckBox::indicator:checked {
+    background: #926bff;
+    border: 1px solid #926bff;
+}
+
+/* Sliders */
+QSlider {
+    min-height: 18px;
+}
+
+QSlider::groove:horizontal {
+    border: none;
+    background: #2a2a3c;
+    height: 4px;
+    border-radius: 2px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #926bff;
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    background: #ffffff;
+    border: 2px solid #926bff;
+    width: 12px;
+    margin: -5px 0;
+    border-radius: 7px;
+}
+
+QSlider::handle:horizontal:hover {
+    border: 2px solid #a185ff;
+}
+
+/* Mixer area */
+QWidget#mixerZone {
+    background: transparent;
+    border: none;
+}
+
+QFrame[cssClass="track"] {
+    background: #161622;
+    border: 1px solid #2a2a3c;
+    border-radius: 10px;
+}
+
+QFrame[cssClass="track"] QLabel[cssClass="track-header-title"] {
+    color: #f3f3f6;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QFrame[cssClass="track"] QPushButton[cssClass="track-header-btn"] {
+    border: none;
+    background: transparent;
+    color: #5c5c6f;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+QFrame[cssClass="track"] QPushButton[cssClass="track-header-btn"]:hover {
+    background: #212130;
+    color: #8a8a9e;
+}
+
+QFrame[cssClass="track"] QFrame[cssClass="track-header-line"] {
+    background: #2a2a3c;
+    min-height: 1px;
+    max-height: 1px;
+    border: none;
+}
+
+QFrame[cssClass="track"] QLabel[cssClass="track-control-label"] {
+    color: #8a8a9e;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QFrame[cssClass="track"] QComboBox[cssClass="track-control-select"] {
+    background: #0d0d12;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    color: #f3f3f6;
+    font-size: 12px;
+    padding: 3px 8px;
+}
+
+QFrame[cssClass="track"] QSlider[cssClass="track-control-slider"] {
+    min-height: 20px;
+}
+
+QFrame[cssClass="track"] QFrame[cssClass="track-vu"] {
+    background: #0d0d12;
+    border-radius: 6px;
+}
+
+QFrame[cssClass="track"] QFrame[cssClass="vu-bg"] {
+    background: #212130;
+    border-radius: 3px;
+}
+
+QFrame[cssClass="track"] QFrame[cssClass="vu-fill"] {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #12c582,
+                                stop:0.70 #12c582,
+                                stop:0.88 #f3a400,
+                                stop:1 #ff4d66);
+    border-radius: 3px;
+}
+
+QFrame[cssClass="track"] QLabel[cssClass="color-badge-text"] {
+    color: #8a8a9e;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Progress */
+QProgressBar {
+    border: none;
+    border-radius: 6px;
+    background: #2a2a3c;
+    color: #f3f3f6;
+    height: 18px;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    background: #926bff;
+    border-radius: 6px;
+}
+
+/* Track settings dialog & Global Settings Dialog */
+QDialog#trackSettingsDialog,
+QDialog#globalSettingsDialog {
+    background: #0d0d12;
+}
+
+QDialog#trackSettingsDialog QLabel#settingsDialogTitle,
+QDialog#globalSettingsDialog QLabel#settingsDialogTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f3f3f6;
+}
+
+QDialog#trackSettingsDialog QLabel#settingsDialogSubtitle,
+QDialog#globalSettingsDialog QLabel#settingsDialogSubtitle {
+    font-size: 12px;
+    color: #8a8a9e;
+    margin-bottom: 2px;
+}
+
+QDialog#trackSettingsDialog QFrame#settingsCardTrackSelector,
+QDialog#globalSettingsDialog QFrame#settingsCard {
+    background: #161622;
+    border: 1px solid #2a2a3c;
+    border-radius: 10px;
+}
+
+QDialog#trackSettingsDialog QLabel[cssClass="settingsLabel"],
+QDialog#globalSettingsDialog QLabel[cssClass="settingsLabel"] {
+    color: #8a8a9e;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 6px;
+}
+
+QDialog#trackSettingsDialog QPushButton[cssClass="trackSelectorButton"],
+QDialog#globalSettingsDialog QPushButton[cssClass="settingsTabButton"] {
+    background: #0d0d12;
+    color: #8a8a9e;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QDialog#trackSettingsDialog QPushButton[cssClass="trackSelectorButton"]:hover,
+QDialog#globalSettingsDialog QPushButton[cssClass="settingsTabButton"]:hover {
+    background: #212130;
+}
+
+QDialog#trackSettingsDialog QPushButton[cssClass="trackSelectorButton"]:checked,
+QDialog#globalSettingsDialog QPushButton[cssClass="settingsTabButton"]:checked {
+    background: #2d2757;
+    color: #a185ff;
+    border: 1px solid #3b3b52;
+}
+
+QDialog#trackSettingsDialog QGroupBox,
+QDialog#globalSettingsDialog QGroupBox {
+    background: #161622;
+    border: 1px solid #2a2a3c;
+    border-radius: 10px;
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #b5b5c6;
+}
+
+QDialog#trackSettingsDialog QGroupBox::title,
+QDialog#globalSettingsDialog QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    top: 2px;
+    padding: 0 6px;
+    color: #8a8a9e;
+    background: #161622;
+}
+
+QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"] {
+    background: #0d0d12;
+    color: #b5b5c6;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:hover {
+    background: #212130;
+}
+
+QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:pressed {
+    background: #2a2a3c;
+}
+
+QDialog#trackSettingsDialog QLabel[cssClass="fineLabel"],
+QDialog#globalSettingsDialog QLabel[cssClass="fineLabel"] {
+    color: #8a8a9e;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QDialog#trackSettingsDialog QFontComboBox,
+QDialog#trackSettingsDialog QSpinBox,
+QDialog#globalSettingsDialog QComboBox,
+QDialog#globalSettingsDialog QSpinBox,
+QDialog#globalSettingsDialog QLineEdit,
+QDialog#globalSettingsDialog QListWidget {
+    background: #0d0d12;
+    color: #f3f3f6;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    min-height: 28px;
+    padding: 4px 10px;
+}
+
+QDialog#trackSettingsDialog QFontComboBox:hover,
+QDialog#trackSettingsDialog QSpinBox:hover,
+QDialog#globalSettingsDialog QComboBox:hover,
+QDialog#globalSettingsDialog QSpinBox:hover,
+QDialog#globalSettingsDialog QLineEdit:hover,
+QDialog#globalSettingsDialog QListWidget:hover {
+    border: 1px solid #3b3b52;
+}
+
+QDialog#trackSettingsDialog QFontComboBox:focus,
+QDialog#trackSettingsDialog QSpinBox:focus,
+QDialog#globalSettingsDialog QComboBox:focus,
+QDialog#globalSettingsDialog QSpinBox:focus,
+QDialog#globalSettingsDialog QLineEdit:focus,
+QDialog#globalSettingsDialog QListWidget:focus {
+    border: 1px solid #926bff;
+}
+
+QDialog#trackSettingsDialog QPushButton[cssClass="colorPickerButton"] {
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+QDialog#trackSettingsDialog QPushButton#settingsCloseButton,
+QDialog#globalSettingsDialog QPushButton#settingsSaveButton {
+    background: #926bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QDialog#trackSettingsDialog QPushButton#settingsCloseButton:hover,
+QDialog#globalSettingsDialog QPushButton#settingsSaveButton:hover {
+    background: #a185ff;
+}
+
+QDialog#trackSettingsDialog QPushButton#settingsCloseButton:pressed,
+QDialog#globalSettingsDialog QPushButton#settingsSaveButton:pressed {
+    background: #7c56f5;
+}
+
+QDialog#globalSettingsDialog QPushButton#settingsCancelButton {
+    background: #0d0d12;
+    color: #b5b5c6;
+    border: 1px solid #3b3b52;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QDialog#globalSettingsDialog QPushButton#settingsCancelButton:hover {
+    background: #212130;
+}
+
+QDialog#globalSettingsDialog QPushButton#settingsCancelButton:pressed {
+    background: #2a2a3c;
+}

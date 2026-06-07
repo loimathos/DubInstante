@@ -14,6 +14,9 @@
 
 #include <QAudioDevice>
 #include <QAudioInput>
+#include <QAudioSource>
+#include <QAudioFormat>
+#include <QBuffer>
 #include <QMediaCaptureSession>
 #include <QMediaDevices>
 #include <QMediaRecorder>
@@ -69,6 +72,21 @@ public:
     void setVolume(float volume);
 
     // =========================================================================
+    // Level Monitoring
+    // =========================================================================
+    
+    /**
+     * @brief Starts monitoring audio input levels.
+     * Call this when a device is selected to get real-time level updates.
+     */
+    void startMonitoring();
+    
+    /**
+     * @brief Stops monitoring audio input levels.
+     */
+    void stopMonitoring();
+
+    // =========================================================================
     // Recording Control
     // =========================================================================
     
@@ -107,11 +125,25 @@ signals:
      * @param state New recorder state.
      */
     void recorderStateChanged(QMediaRecorder::RecorderState state);
+    
+    /**
+     * @brief Emitted with the current audio input level.
+     * @param level Audio level from 0.0 (silence) to 1.0 (max/clipping).
+     */
+    void levelChanged(float level);
+
+private slots:
+    void processAudioBuffer();
 
 private:
     QMediaCaptureSession m_captureSession;
     QAudioInput *m_audioInput;
     QMediaRecorder *m_recorder;
+    
+    // Level monitoring
+    QAudioSource *m_audioSource;
+    QIODevice *m_audioIODevice;
+    bool m_isMonitoring;
 };
 
 #endif // AUDIORECORDER_H
