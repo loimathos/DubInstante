@@ -98,6 +98,7 @@ private slots:
   // Export
   void onExportProgress(int percentage);
   void onExportFinished(bool success, const QString &message);
+  void showExportDialog();
 
   // Error handling
   void onError(const QString &errorMessage);
@@ -183,6 +184,7 @@ private:
   QAction *m_actionOpenMp4;
   QAction *m_actionLoadProject;
   QAction *m_actionSaveProject;
+  QAction *m_actionManualExport;
 
   QAction *m_actionExpertMode;
   QAction *m_actionFullscreen;

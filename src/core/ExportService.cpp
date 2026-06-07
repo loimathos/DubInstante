@@ -194,11 +194,16 @@ QStringList ExportService::buildFFmpegArgs(const ExportConfig &config) const
         if (!extraPath.isEmpty()) extraCount++;
     }
     
-    // Video encoding: High quality H.264
+    // Video encoding
     args << "-c:v" << "libx264";
-    args << "-preset" << "superfast";
-    args << "-crf" << "18";
+    args << "-preset" << (config.speedPreset.isEmpty() ? "medium" : config.speedPreset);
+    args << "-crf" << QString::number(config.crf >= 0 ? config.crf : 21);
     args << "-pix_fmt" << "yuv420p";
+    
+    // Scale resolution if specified
+    if (!config.scaleResolution.isEmpty()) {
+        args << "-vf" << QString("scale=%1").arg(config.scaleResolution);
+    }
     
     // Build audio filter complex
     QString filterComplex;
@@ -209,11 +214,13 @@ QStringList ExportService::buildFFmpegArgs(const ExportConfig &config) const
     }
     
     // Primary track
-    filterComplex += "[1:a]volume=1.0[a1];";
+    float primaryVol = (config.trackVolumes.size() > 0) ? config.trackVolumes[0] : 1.0f;
+    filterComplex += QString("[1:a]volume=%1[a1];").arg(primaryVol);
     
     // Extra tracks: input indices start at 2
     for (int i = 0; i < extraCount; ++i) {
-        filterComplex += QString("[%1:a]volume=1.0[a%2];").arg(i + 2).arg(i + 2);
+        float extraVol = (config.trackVolumes.size() > i + 1) ? config.trackVolumes[i + 1] : 1.0f;
+        filterComplex += QString("[%1:a]volume=%2[a%3];").arg(i + 2).arg(extraVol).arg(i + 2);
     }
     
     // AMIX: combine all audio streams
@@ -230,8 +237,15 @@ QStringList ExportService::buildFFmpegArgs(const ExportConfig &config) const
     args << "-filter_complex" << filterComplex;
     args << "-map" << "0:v:0";
     args << "-map" << "[aout]";
-    args << "-c:a" << "aac";
-    args << "-b:a" << "192k";
+    
+    // Select audio encoder based on format
+    QString fmt = config.format.toLower();
+    if (fmt == "avi") {
+        args << "-c:a" << "libmp3lame";
+    } else {
+        args << "-c:a" << "aac";
+    }
+    args << "-b:a" << QString("%1k").arg(config.audioBitrateKbps > 0 ? config.audioBitrateKbps : 192);
     
     // Duration limit
     if (config.durationMs > 0) {

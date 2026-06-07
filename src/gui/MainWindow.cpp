@@ -8,6 +8,7 @@
 // Core includes
 #include "AudioRecorder.h"
 #include "ExportService.h"
+#include "ExportDialog.h"
 #include "PlaybackEngine.h"
 #include "RythmoManager.h"
 #include "SaveManager.h"
@@ -402,6 +403,11 @@ void MainWindow::createMenus() {
   connect(m_actionSaveProject, &QAction::triggered, this,
           &MainWindow::onSaveProject);
   filesMenu->addAction(m_actionSaveProject);
+
+  m_actionManualExport = new QAction(tr("Exporter le doublage..."), this);
+  connect(m_actionManualExport, &QAction::triggered, this,
+          &MainWindow::showExportDialog);
+  filesMenu->addAction(m_actionManualExport);
 
   // === Application Menu ===
   QMenu *appMenu = menuBar->addMenu(tr("Application"));
@@ -1179,31 +1185,7 @@ void MainWindow::toggleRecording() {
     m_recordButton->setText("REC");
     m_actionOpenMp4->setEnabled(true);
 
-    // Prompt for save location
-    QString currentVideo = property("currentVideoPath").toString();
-    QString outputFile = QFileDialog::getSaveFileName(
-        this, tr("Sauvegarder le doublage"),
-        QDir::homePath() + "/dub_result.mp4", tr("Video (*.mp4)"));
-
-    if (!outputFile.isEmpty()) {
-      m_exportProgressBar->setVisible(true);
-      m_exportProgressBar->setValue(0);
-
-      ExportConfig config;
-      config.videoPath = currentVideo;
-      config.audioPath = m_tempAudioPaths[0]; // Primary track
-      config.outputPath = outputFile;
-      config.durationMs = m_lastRecordedDurationMs;
-      config.startTimeMs = m_recordingStartTimeMs;
-      config.originalVolume = m_playbackEngine->volume();
-
-      // Add extra audio tracks (index 1+)
-      for (int i = 1; i < m_trackCount; ++i) {
-        config.extraAudioPaths.append(m_tempAudioPaths[i]);
-      }
-
-      m_exportService->startExport(config);
-    }
+    showExportDialog();
   }
 }
 
@@ -1307,6 +1289,80 @@ void MainWindow::onExportFinished(bool success, const QString &message) {
     QMessageBox::information(this, tr("Export"), message);
   } else {
     QMessageBox::critical(this, tr("Export"), message);
+  }
+}
+
+void MainWindow::showExportDialog() {
+  QString currentVideo = property("currentVideoPath").toString();
+  if (currentVideo.isEmpty()) {
+    QMessageBox::warning(this, tr("Export"), tr("Aucune vidéo chargée."));
+    return;
+  }
+  
+  if (m_tempAudioPaths.isEmpty() || m_tempAudioPaths[0].isEmpty()) {
+    QMessageBox::warning(this, tr("Export"), tr("Aucun enregistrement audio trouvé à exporter."));
+    return;
+  }
+
+  // Construct current volumes and mutes list
+  QVector<float> currentTrackVolumes;
+  QVector<bool> currentTrackMutes;
+
+  // Primary track (index 0)
+  if (m_trackPanels.size() > 0) {
+    float vol = m_trackPanels[0]->currentVolume() / 100.0f;
+    currentTrackVolumes.append(vol);
+    currentTrackMutes.append(vol < 0.01f);
+  } else {
+    currentTrackVolumes.append(1.0f);
+    currentTrackMutes.append(false);
+  }
+
+  // Extra tracks (indices 1+)
+  for (int i = 1; i < m_trackCount; ++i) {
+    if (m_trackPanels.size() > i) {
+      float vol = m_trackPanels[i]->currentVolume() / 100.0f;
+      currentTrackVolumes.append(vol);
+      currentTrackMutes.append(vol < 0.01f);
+    } else {
+      currentTrackVolumes.append(1.0f);
+      currentTrackMutes.append(false);
+    }
+  }
+
+  float originalVol = m_playbackEngine->volume();
+  bool originalMuted = m_volumeMuteButton->isChecked();
+
+  // Create list of extra audio tracks
+  QStringList extraAudios;
+  for (int i = 1; i < m_trackCount; ++i) {
+    if (m_tempAudioPaths.size() > i) {
+      extraAudios.append(m_tempAudioPaths[i]);
+    } else {
+      extraAudios.append("");
+    }
+  }
+
+  ExportDialog dialog(
+      currentVideo,
+      m_tempAudioPaths[0],
+      extraAudios,
+      m_lastRecordedDurationMs,
+      m_recordingStartTimeMs,
+      originalMuted ? 0.0f : originalVol,
+      currentTrackVolumes,
+      currentTrackMutes,
+      this
+  );
+
+  if (dialog.exec() == QDialog::Accepted) {
+    ExportConfig config = dialog.exportConfig();
+    
+    // Set UI progress indicators
+    m_exportProgressBar->setVisible(true);
+    m_exportProgressBar->setValue(0);
+    
+    m_exportService->startExport(config);
   }
 }
 

@@ -532,30 +532,35 @@ QProgressBar::chunk {
     border-radius: 6px;
 }
 
-/* Track settings dialog */
-QDialog#trackSettingsDialog {
+/* Track settings dialog & Export Settings Dialog */
+QDialog#trackSettingsDialog,
+QDialog#exportSettingsDialog {
     background: #fafafb;
 }
 
-QDialog#trackSettingsDialog QLabel#settingsDialogTitle {
+QDialog#trackSettingsDialog QLabel#settingsDialogTitle,
+QDialog#exportSettingsDialog QLabel#settingsDialogTitle {
     font-size: 18px;
     font-weight: 700;
     color: #121217;
 }
 
-QDialog#trackSettingsDialog QLabel#settingsDialogSubtitle {
+QDialog#trackSettingsDialog QLabel#settingsDialogSubtitle,
+QDialog#exportSettingsDialog QLabel#settingsDialogSubtitle {
     font-size: 12px;
     color: #7a7a85;
     margin-bottom: 2px;
 }
 
-QDialog#trackSettingsDialog QFrame#settingsCardTrackSelector {
+QDialog#trackSettingsDialog QFrame#settingsCardTrackSelector,
+QDialog#exportSettingsDialog QFrame#settingsCard {
     background: #ffffff;
     border: 1px solid #e9e9ed;
     border-radius: 10px;
 }
 
-QDialog#trackSettingsDialog QLabel[cssClass="settingsLabel"] {
+QDialog#trackSettingsDialog QLabel[cssClass="settingsLabel"],
+QDialog#exportSettingsDialog QLabel[cssClass="settingsLabel"] {
     color: #7a7a85;
     font-size: 11px;
     font-weight: 600;
@@ -582,7 +587,8 @@ QDialog#trackSettingsDialog QPushButton[cssClass="trackSelectorButton"]:checked 
     border: 1px solid #d9ccff;
 }
 
-QDialog#trackSettingsDialog QGroupBox {
+QDialog#trackSettingsDialog QGroupBox,
+QDialog#exportSettingsDialog QGroupBox {
     background: #ffffff;
     border: 1px solid #e9e9ed;
     border-radius: 10px;
@@ -592,7 +598,8 @@ QDialog#trackSettingsDialog QGroupBox {
     color: #3a3a42;
 }
 
-QDialog#trackSettingsDialog QGroupBox::title {
+QDialog#trackSettingsDialog QGroupBox::title,
+QDialog#exportSettingsDialog QGroupBox::title {
     subcontrol-origin: margin;
     left: 12px;
     top: 2px;
@@ -619,14 +626,18 @@ QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:pressed {
     background: #e9e9ed;
 }
 
-QDialog#trackSettingsDialog QLabel[cssClass="fineLabel"] {
+QDialog#trackSettingsDialog QLabel[cssClass="fineLabel"],
+QDialog#exportSettingsDialog QLabel[cssClass="fineLabel"] {
     color: #7a7a85;
     font-size: 11px;
     font-weight: 600;
 }
 
 QDialog#trackSettingsDialog QFontComboBox,
-QDialog#trackSettingsDialog QSpinBox {
+QDialog#trackSettingsDialog QSpinBox,
+QDialog#exportSettingsDialog QComboBox,
+QDialog#exportSettingsDialog QSpinBox,
+QDialog#exportSettingsDialog QLineEdit {
     background: #ffffff;
     color: #121217;
     border: 1px solid #e9e9ed;
@@ -636,12 +647,18 @@ QDialog#trackSettingsDialog QSpinBox {
 }
 
 QDialog#trackSettingsDialog QFontComboBox:hover,
-QDialog#trackSettingsDialog QSpinBox:hover {
+QDialog#trackSettingsDialog QSpinBox:hover,
+QDialog#exportSettingsDialog QComboBox:hover,
+QDialog#exportSettingsDialog QSpinBox:hover,
+QDialog#exportSettingsDialog QLineEdit:hover {
     border: 1px solid #d6d6dc;
 }
 
 QDialog#trackSettingsDialog QFontComboBox:focus,
-QDialog#trackSettingsDialog QSpinBox:focus {
+QDialog#trackSettingsDialog QSpinBox:focus,
+QDialog#exportSettingsDialog QComboBox:focus,
+QDialog#exportSettingsDialog QSpinBox:focus,
+QDialog#exportSettingsDialog QLineEdit:focus {
     border: 1px solid #7c56f5;
 }
 

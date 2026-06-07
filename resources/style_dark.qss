@@ -532,35 +532,40 @@ QProgressBar::chunk {
     border-radius: 6px;
 }
 
-/* Track settings dialog & Global Settings Dialog */
+/* Track settings dialog & Global Settings Dialog & Export Settings Dialog */
 QDialog#trackSettingsDialog,
-QDialog#globalSettingsDialog {
+QDialog#globalSettingsDialog,
+QDialog#exportSettingsDialog {
     background: #0d0d12;
 }
 
 QDialog#trackSettingsDialog QLabel#settingsDialogTitle,
-QDialog#globalSettingsDialog QLabel#settingsDialogTitle {
+QDialog#globalSettingsDialog QLabel#settingsDialogTitle,
+QDialog#exportSettingsDialog QLabel#settingsDialogTitle {
     font-size: 18px;
     font-weight: 700;
     color: #f3f3f6;
 }
 
 QDialog#trackSettingsDialog QLabel#settingsDialogSubtitle,
-QDialog#globalSettingsDialog QLabel#settingsDialogSubtitle {
+QDialog#globalSettingsDialog QLabel#settingsDialogSubtitle,
+QDialog#exportSettingsDialog QLabel#settingsDialogSubtitle {
     font-size: 12px;
     color: #8a8a9e;
     margin-bottom: 2px;
 }
 
 QDialog#trackSettingsDialog QFrame#settingsCardTrackSelector,
-QDialog#globalSettingsDialog QFrame#settingsCard {
+QDialog#globalSettingsDialog QFrame#settingsCard,
+QDialog#exportSettingsDialog QFrame#settingsCard {
     background: #161622;
     border: 1px solid #2a2a3c;
     border-radius: 10px;
 }
 
 QDialog#trackSettingsDialog QLabel[cssClass="settingsLabel"],
-QDialog#globalSettingsDialog QLabel[cssClass="settingsLabel"] {
+QDialog#globalSettingsDialog QLabel[cssClass="settingsLabel"],
+QDialog#exportSettingsDialog QLabel[cssClass="settingsLabel"] {
     color: #8a8a9e;
     font-size: 11px;
     font-weight: 600;
@@ -591,7 +596,8 @@ QDialog#globalSettingsDialog QPushButton[cssClass="settingsTabButton"]:checked {
 }
 
 QDialog#trackSettingsDialog QGroupBox,
-QDialog#globalSettingsDialog QGroupBox {
+QDialog#globalSettingsDialog QGroupBox,
+QDialog#exportSettingsDialog QGroupBox {
     background: #161622;
     border: 1px solid #2a2a3c;
     border-radius: 10px;
@@ -602,7 +608,8 @@ QDialog#globalSettingsDialog QGroupBox {
 }
 
 QDialog#trackSettingsDialog QGroupBox::title,
-QDialog#globalSettingsDialog QGroupBox::title {
+QDialog#globalSettingsDialog QGroupBox::title,
+QDialog#exportSettingsDialog QGroupBox::title {
     subcontrol-origin: margin;
     left: 12px;
     top: 2px;
@@ -630,7 +637,8 @@ QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:pressed {
 }
 
 QDialog#trackSettingsDialog QLabel[cssClass="fineLabel"],
-QDialog#globalSettingsDialog QLabel[cssClass="fineLabel"] {
+QDialog#globalSettingsDialog QLabel[cssClass="fineLabel"],
+QDialog#exportSettingsDialog QLabel[cssClass="fineLabel"] {
     color: #8a8a9e;
     font-size: 11px;
     font-weight: 600;
@@ -641,7 +649,10 @@ QDialog#trackSettingsDialog QSpinBox,
 QDialog#globalSettingsDialog QComboBox,
 QDialog#globalSettingsDialog QSpinBox,
 QDialog#globalSettingsDialog QLineEdit,
-QDialog#globalSettingsDialog QListWidget {
+QDialog#globalSettingsDialog QListWidget,
+QDialog#exportSettingsDialog QComboBox,
+QDialog#exportSettingsDialog QSpinBox,
+QDialog#exportSettingsDialog QLineEdit {
     background: #0d0d12;
     color: #f3f3f6;
     border: 1px solid #2a2a3c;
@@ -655,7 +666,10 @@ QDialog#trackSettingsDialog QSpinBox:hover,
 QDialog#globalSettingsDialog QComboBox:hover,
 QDialog#globalSettingsDialog QSpinBox:hover,
 QDialog#globalSettingsDialog QLineEdit:hover,
-QDialog#globalSettingsDialog QListWidget:hover {
+QDialog#globalSettingsDialog QListWidget:hover,
+QDialog#exportSettingsDialog QComboBox:hover,
+QDialog#exportSettingsDialog QSpinBox:hover,
+QDialog#exportSettingsDialog QLineEdit:hover {
     border: 1px solid #3b3b52;
 }
 

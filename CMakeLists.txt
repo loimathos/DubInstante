@@ -93,6 +93,8 @@ set(GUI_SOURCES
     src/gui/TrackSettingsDialog.cpp
     src/gui/GlobalSettingsDialog.h
     src/gui/GlobalSettingsDialog.cpp
+    src/gui/ExportDialog.h
+    src/gui/ExportDialog.cpp
     src/gui/ClickableSlider.h
 )
 
