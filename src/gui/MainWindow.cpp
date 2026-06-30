@@ -135,6 +135,16 @@ void MainWindow::applyTheme() {
   }
 }
 
+void MainWindow::updateVolumeIcon(int value) {
+  if (value == 0) {
+    m_volumeMuteButton->setIcon(QIcon(":/resources/icons/volume_mute.svg"));
+  } else if (value < 50) {
+    m_volumeMuteButton->setIcon(QIcon(":/resources/icons/volume_low.svg"));
+  } else {
+    m_volumeMuteButton->setIcon(QIcon(":/resources/icons/volume.svg"));
+  }
+}
+
 void MainWindow::setupUi() {
   QWidget *centralWidget = new QWidget(this);
   centralWidget->setObjectName("CentralWidget");
@@ -569,6 +579,7 @@ void MainWindow::setupConnections() {
     if (value > 0) {
       m_previousVolume = value;
     }
+    updateVolumeIcon(value);
   });
 
   connect(m_volumeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this,
@@ -579,6 +590,7 @@ void MainWindow::setupConnections() {
               m_volumeSlider->setValue(value);
               m_volumeSlider->blockSignals(false);
             }
+            updateVolumeIcon(value);
           });
 
   connect(m_volumeDownButton, &QPushButton::clicked, this, [this]() {
@@ -1098,15 +1110,6 @@ void MainWindow::toggleRecording() {
         m_countdownLabel = new QLabel(m_videoFrame);
         m_countdownLabel->setObjectName("countdownLabel");
         m_countdownLabel->setAlignment(Qt::AlignCenter);
-        m_countdownLabel->setStyleSheet(
-            "QLabel#countdownLabel {"
-            "  color: #926bff;"
-            "  font-size: 80px;"
-            "  font-weight: bold;"
-            "  background-color: rgba(13, 13, 18, 0.75);"
-            "  border-radius: 20px;"
-            "}"
-        );
       }
       
       int lblWidth = 160;

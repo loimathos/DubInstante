@@ -1,6 +1,7 @@
 #include "TrackSettingsDialog.h"
 
 #include "../gui/RythmoWidget.h"
+#include "../core/SettingsManager.h"
 #include <QButtonGroup>
 #include <QColorDialog>
 #include <QComboBox>
@@ -240,22 +241,35 @@ void TrackSettingsDialog::setupUi() {
 
 void TrackSettingsDialog::updateColorButton(QPushButton *btn,
                                             const QColor &color) {
+  bool isDark = false;
+  QString themeMode = SettingsManager::instance().theme();
+  if (themeMode == "dark") {
+    isDark = true;
+  } else if (themeMode == "system") {
+    isDark = (palette().color(QPalette::Window).value() < 128);
+  }
+
+  QString borderCol = isDark ? "#3b3b52" : "#cbd5e1";
+
   if (color.alpha() == 0) {
-    btn->setStyleSheet("background-color: #ffffff;"
-                       "border: 1px dashed #cbd5e1;"
-                       "border-radius: 8px;"
-                       "color: #64748b;"
-                       "padding: 4px 10px;");
+    QString bgCol = isDark ? "#161622" : "#ffffff";
+    QString fgCol = isDark ? "#8a8a9e" : "#64748b";
+    btn->setStyleSheet(QString("background-color: %1;"
+                               "border: 1px dashed %2;"
+                               "border-radius: 8px;"
+                               "color: %3;"
+                               "padding: 4px 10px;")
+                           .arg(bgCol, borderCol, fgCol));
     btn->setText(tr("Transparent"));
   } else {
     const QString textColor = color.lightnessF() > 0.55 ? "#0f172a" : "#ffffff";
     btn->setStyleSheet(
         QString("background-color: %1;"
-                "border: 1px solid #cbd5e1;"
+                "border: 1px solid %2;"
                 "border-radius: 8px;"
-                "color: %2;"
+                "color: %3;"
                 "padding: 4px 10px;")
-            .arg(color.name(QColor::HexArgb), textColor));
+            .arg(color.name(QColor::HexArgb), borderCol, textColor));
     btn->setText(color.name(QColor::HexRgb).toUpper());
   }
 }

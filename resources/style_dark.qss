@@ -287,10 +287,10 @@ QWidget#controlBar QPushButton#recordButton:checked {
 }
 
 /* Inputs — hide built-in spinbox arrows */
-QSpinBox::up-button,
-QSpinBox::down-button,
-QDoubleSpinBox::up-button,
-QDoubleSpinBox::down-button {
+QWidget#controlBar QSpinBox::up-button,
+QWidget#controlBar QSpinBox::down-button,
+QWidget#controlBar QDoubleSpinBox::up-button,
+QWidget#controlBar QDoubleSpinBox::down-button {
     width: 0;
     border: none;
 }
@@ -572,7 +572,8 @@ QDialog#exportSettingsDialog QGroupBox::title {
 }
 
 QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"],
-QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"] {
+QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"],
+QDialog#exportSettingsDialog QPushButton[cssClass="presetButton"] {
     background: #0d0d12;
     color: #b5b5c6;
     border: 1px solid #2a2a3c;
@@ -583,12 +584,14 @@ QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"] {
 }
 
 QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:hover,
-QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"]:hover {
+QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"]:hover,
+QDialog#exportSettingsDialog QPushButton[cssClass="presetButton"]:hover {
     background: #212130;
 }
 
 QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:pressed,
-QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"]:pressed {
+QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"]:pressed,
+QDialog#exportSettingsDialog QPushButton[cssClass="presetButton"]:pressed {
     background: #2a2a3c;
 }
 
@@ -671,7 +674,8 @@ QDialog#trackSettingsDialog QPushButton[cssClass="colorPickerButton"] {
 }
 
 QDialog#trackSettingsDialog QPushButton#settingsCloseButton,
-QDialog#globalSettingsDialog QPushButton#settingsSaveButton {
+QDialog#globalSettingsDialog QPushButton#settingsSaveButton,
+QDialog#exportSettingsDialog QPushButton#settingsExportButton {
     background: #926bff;
     color: #ffffff;
     border: none;
@@ -682,12 +686,14 @@ QDialog#globalSettingsDialog QPushButton#settingsSaveButton {
 }
 
 QDialog#trackSettingsDialog QPushButton#settingsCloseButton:hover,
-QDialog#globalSettingsDialog QPushButton#settingsSaveButton:hover {
+QDialog#globalSettingsDialog QPushButton#settingsSaveButton:hover,
+QDialog#exportSettingsDialog QPushButton#settingsExportButton:hover {
     background: #a185ff;
 }
 
 QDialog#trackSettingsDialog QPushButton#settingsCloseButton:pressed,
-QDialog#globalSettingsDialog QPushButton#settingsSaveButton:pressed {
+QDialog#globalSettingsDialog QPushButton#settingsSaveButton:pressed,
+QDialog#exportSettingsDialog QPushButton#settingsExportButton:pressed {
     background: #7c56f5;
 }
 
@@ -779,3 +785,79 @@ QDialog#globalSettingsDialog QScrollBar::add-page:vertical,
 QDialog#globalSettingsDialog QScrollBar::sub-page:vertical {
     background: none;
 }
+
+/* Stepper style */
+QPushButton[cssClass="stepButton"] {
+    background: #0d0d12;
+    color: #8a8a9e;
+    border: 1px solid #2a2a3c;
+    border-radius: 8px;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 28px;
+    min-height: 28px;
+}
+
+QPushButton[cssClass="stepButton"]:hover {
+    background: #212130;
+    border: 1px solid #3b3b52;
+    color: #f3f3f6;
+}
+
+QPushButton[cssClass="stepButton"]:pressed {
+    background: #2a2a3c;
+}
+
+QLabel#countdownValueLabel {
+    font-size: 13px;
+    font-weight: bold;
+    min-width: 90px;
+    color: #f3f3f6;
+}
+
+.warning-text {
+    color: #f3a400;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px;
+}
+
+QLabel#countdownLabel {
+    color: #926bff;
+    font-size: 80px;
+    font-weight: bold;
+    background-color: rgba(13, 13, 18, 0.75);
+    border-radius: 20px;
+}
+
+/* QMessageBox Theming */
+QMessageBox {
+    background-color: #161622;
+    color: #f3f3f6;
+}
+
+QMessageBox QLabel {
+    color: #f3f3f6;
+    font-size: 13px;
+}
+
+QMessageBox QPushButton {
+    background: #212130;
+    color: #b5b5c6;
+    border: 1px solid #3b3b52;
+    border-radius: 6px;
+    padding: 5px 12px;
+    min-width: 70px;
+}
+
+QMessageBox QPushButton:hover {
+    background: #2a2a3c;
+    color: #ffffff;
+}
+
+QMessageBox QPushButton:pressed {
+    background: #1d1d29;
+}
+
+

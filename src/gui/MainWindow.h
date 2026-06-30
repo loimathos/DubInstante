@@ -123,6 +123,7 @@ private:
   void loadStylesheet();
   void enterFullscreenRecording();
   void exitFullscreenRecording();
+  void updateVolumeIcon(int value);
 
   // Dynamic track management
   void setTrackCount(int count);

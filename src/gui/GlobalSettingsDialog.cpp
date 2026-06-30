@@ -119,14 +119,39 @@ void GlobalSettingsDialog::setupUi() {
     m_themeCombo->addItem(tr("Mode Sombre Premium"), "dark");
     genForm->addRow(themeLabel, m_themeCombo);
 
-    // Countdown Selector
+    // Countdown Selector (Stepper layout)
     QLabel *countdownLabel = new QLabel(tr("Décompte pré-enregistrement"), generalPage);
     countdownLabel->setProperty("cssClass", "fineLabel");
-    m_countdownSpin = new QSpinBox(generalPage);
-    m_countdownSpin->setRange(0, 10);
-    m_countdownSpin->setSuffix(tr(" secondes"));
-    m_countdownSpin->setSpecialValueText(tr("Désactivé (Instantané)"));
-    genForm->addRow(countdownLabel, m_countdownSpin);
+
+    QWidget *countdownStepperWidget = new QWidget(generalPage);
+    QHBoxLayout *stepperLayout = new QHBoxLayout(countdownStepperWidget);
+    stepperLayout->setContentsMargins(0, 0, 0, 0);
+    stepperLayout->setSpacing(6);
+
+    m_countdownDownBtn = new QPushButton("−", countdownStepperWidget);
+    m_countdownDownBtn->setProperty("cssClass", "stepButton");
+    m_countdownDownBtn->setFixedSize(28, 28);
+    m_countdownDownBtn->setCursor(Qt::PointingHandCursor);
+
+    m_countdownValueLabel = new QLabel(countdownStepperWidget);
+    m_countdownValueLabel->setObjectName("countdownValueLabel");
+    m_countdownValueLabel->setAlignment(Qt::AlignCenter);
+
+    m_countdownUpBtn = new QPushButton("+", countdownStepperWidget);
+    m_countdownUpBtn->setProperty("cssClass", "stepButton");
+    m_countdownUpBtn->setFixedSize(28, 28);
+    m_countdownUpBtn->setCursor(Qt::PointingHandCursor);
+
+    stepperLayout->addWidget(m_countdownDownBtn);
+    stepperLayout->addWidget(m_countdownValueLabel);
+    stepperLayout->addWidget(m_countdownUpBtn);
+    stepperLayout->addStretch();
+
+    genForm->addRow(countdownLabel, countdownStepperWidget);
+
+    connect(m_countdownDownBtn, &QPushButton::clicked, this, &GlobalSettingsDialog::decrementCountdown);
+    connect(m_countdownUpBtn, &QPushButton::clicked, this, &GlobalSettingsDialog::incrementCountdown);
+
 
     genLayout->addLayout(genForm);
 
@@ -368,7 +393,8 @@ void GlobalSettingsDialog::loadSettings() {
     int themeIdx = m_themeCombo->findData(sm.theme());
     if (themeIdx >= 0) m_themeCombo->setCurrentIndex(themeIdx);
 
-    m_countdownSpin->setValue(sm.countdownDuration());
+    m_tempCountdownDuration = sm.countdownDuration();
+    updateCountdownLabel();
 
     m_autoSaveCheck->setChecked(sm.autoSaveEnabled());
     int intervalIdx = m_autoSaveIntervalCombo->findData(sm.autoSaveInterval());
@@ -436,7 +462,7 @@ void GlobalSettingsDialog::saveSettings() {
 
     // General settings
     sm.setTheme(m_themeCombo->currentData().toString());
-    sm.setCountdownDuration(m_countdownSpin->value());
+    sm.setCountdownDuration(m_tempCountdownDuration);
     sm.setAutoSaveEnabled(m_autoSaveCheck->isChecked());
     sm.setAutoSaveInterval(m_autoSaveIntervalCombo->currentData().toInt());
 
@@ -641,3 +667,32 @@ void GlobalSettingsDialog::onResetShortcutsToDefaults() {
         updateShortcutButtons();
     }
 }
+
+void GlobalSettingsDialog::decrementCountdown() {
+    if (m_tempCountdownDuration > 0) {
+        m_tempCountdownDuration--;
+        updateCountdownLabel();
+    }
+}
+
+void GlobalSettingsDialog::incrementCountdown() {
+    if (m_tempCountdownDuration < 10) {
+        m_tempCountdownDuration++;
+        updateCountdownLabel();
+    }
+}
+
+void GlobalSettingsDialog::updateCountdownLabel() {
+    if (m_tempCountdownDuration == 0) {
+        m_countdownValueLabel->setText(tr("Désactivé (Instantané)"));
+        m_countdownDownBtn->setEnabled(false);
+    } else if (m_tempCountdownDuration == 1) {
+        m_countdownValueLabel->setText(tr("1 seconde"));
+        m_countdownDownBtn->setEnabled(true);
+    } else {
+        m_countdownValueLabel->setText(tr("%1 secondes").arg(m_tempCountdownDuration));
+        m_countdownDownBtn->setEnabled(true);
+    }
+    m_countdownUpBtn->setEnabled(m_tempCountdownDuration < 10);
+}
+

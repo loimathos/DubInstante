@@ -4,6 +4,7 @@
  */
 
 #include "RythmoWidget.h"
+#include "../core/SettingsManager.h"
 
 #include <QFontDatabase>
 #include <QFontMetrics>
@@ -277,13 +278,23 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
     }
   }
 
+  // Determine active theme accent color
+  bool isDark = false;
+  QString themeMode = SettingsManager::instance().theme();
+  if (themeMode == "dark") {
+    isDark = true;
+  } else if (themeMode == "system") {
+    isDark = (palette().color(QPalette::Window).value() < 128);
+  }
+  QColor accentColor = isDark ? QColor(146, 107, 255) : QColor(124, 86, 245); // #926bff vs #7c56f5
+
   // 5. Draw band border
-  QPen borderPen(QColor(0, 120, 215), 2);
+  QPen borderPen(accentColor, 2);
   painter.setPen(borderPen);
   painter.drawRect(bandRect);
 
   // 6. Draw target line (guide)
-  QPen targetPen(QColor(0, 120, 215), 2);
+  QPen targetPen(accentColor, 2);
   targetPen.setStyle(Qt::DashLine);
   painter.setPen(targetPen);
   painter.drawLine(targetX, bandY, targetX, bandY + bandHeight);
@@ -307,7 +318,7 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
       lineTop -= 2;
 
     // Vertical cursor line
-    QPen cursorPen(QColor(0, 120, 215), 3);
+    QPen cursorPen(accentColor, 3);
     painter.setPen(cursorPen);
     painter.drawLine(cursorScreenX, lineTop, cursorScreenX, lineBottom);
 
@@ -317,7 +328,7 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
       tri << QPoint(cursorScreenX, bandY)
           << QPoint(cursorScreenX - 5, bandY - 10)
           << QPoint(cursorScreenX + 5, bandY - 10);
-      painter.setBrush(QColor(0, 120, 215));
+      painter.setBrush(accentColor);
       painter.drawPolygon(tri);
     }
 
@@ -331,10 +342,19 @@ void RythmoWidget::paintEvent(QPaintEvent *event) {
                             .arg(ss, 2, 10, QChar('0'))
                             .arg(ms, 3, 10, QChar('0'));
 
-      painter.setPen(QColor(34, 34, 34));
       QFont smallFont("Segoe UI", 8, QFont::Bold);
       painter.setFont(smallFont);
       int tw = painter.fontMetrics().horizontalAdvance(timeStr);
+      int th = painter.fontMetrics().height();
+
+      // Draw a subtle translucent background pill for the timestamp (always readable over video)
+      QRectF pillRect(cursorScreenX - tw / 2.0 - 6, bandY - 12 - th + 2, tw + 12, th + 4);
+      painter.setBrush(QColor(13, 13, 18, 160)); // 62% opacity dark background
+      painter.setPen(Qt::NoPen);
+      painter.drawRoundedRect(pillRect, 4, 4);
+
+      // Draw text
+      painter.setPen(isDark ? QColor(243, 243, 246) : QColor(255, 255, 255));
       painter.drawText(cursorScreenX - tw / 2, bandY - 12, timeStr);
     }
   }

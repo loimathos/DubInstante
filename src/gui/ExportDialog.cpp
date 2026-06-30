@@ -366,7 +366,7 @@ void ExportDialog::setupUi()
     m_warningLabel = new QLabel(this);
     m_warningLabel->setObjectName("warningLabel");
     m_warningLabel->setWordWrap(true);
-    m_warningLabel->setStyleSheet("color: #f3a400; font-size: 11px; font-weight: 600; padding: 4px;");
+    m_warningLabel->setProperty("cssClass", "warning-text");
     m_warningLabel->setVisible(false);
     leftColumn->addWidget(m_warningLabel);
 
@@ -384,8 +384,10 @@ void ExportDialog::setupUi()
     scrollArea->setWidgetResizable(true);
     scrollArea->setFrameStyle(QFrame::NoFrame);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setStyleSheet("background: transparent;");
 
     QWidget *scrollWidget = new QWidget(scrollArea);
+    scrollWidget->setStyleSheet("background: transparent;");
     m_audioTracksLayout = new QVBoxLayout(scrollWidget);
     m_audioTracksLayout->setContentsMargins(4, 4, 4, 4);
     m_audioTracksLayout->setSpacing(12);
@@ -458,9 +460,9 @@ void ExportDialog::setupUi()
     bottomLayout->addWidget(m_btnCancel);
 
     m_btnExport = new QPushButton(tr("Exporter"), this);
+    m_btnExport->setObjectName("settingsExportButton");
     m_btnExport->setMinimumSize(100, 32);
     m_btnExport->setDefault(true);
-    m_btnExport->setStyleSheet("background-color: #926bff; color: white; font-weight: 700; border-radius: 8px; border: none; padding: 4px 16px;");
     bottomLayout->addWidget(m_btnExport);
 
     mainLayout->addLayout(bottomLayout);

@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QButtonGroup>
 #include <QPushButton>
+#include <QLabel>
 #include <QStackedWidget>
 #include <QComboBox>
 #include <QSpinBox>
@@ -38,6 +39,8 @@ private slots:
     void onShortcutButtonClicked(const QString &actionId);
     void onClearShortcut(const QString &actionId);
     void onResetShortcutsToDefaults();
+    void decrementCountdown();
+    void incrementCountdown();
 
 private:
     void setupUi();
@@ -48,6 +51,7 @@ private:
     bool checkConflict(const QKeySequence &seq, const QString &currentActionId);
     QString getActionName(const QString &actionId) const;
     void updateShortcutButtons();
+    void updateCountdownLabel();
 
     // Tab control
     QButtonGroup *m_tabGroup;
@@ -56,7 +60,11 @@ private:
 
     // General Controls
     QComboBox *m_themeCombo;
-    QSpinBox *m_countdownSpin;
+    QLabel *m_countdownValueLabel;
+    QPushButton *m_countdownDownBtn;
+    QPushButton *m_countdownUpBtn;
+    int m_tempCountdownDuration;
+
     QCheckBox *m_autoSaveCheck;
     QComboBox *m_autoSaveIntervalCombo;
 
