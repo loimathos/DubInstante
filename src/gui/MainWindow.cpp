@@ -480,36 +480,6 @@ void MainWindow::createMenus() {
   m_audioMenu = menuBar->addMenu(tr("Audio"));
   updateAudioMenu();
 
-  // === Account Menu (Right aligned) ===
-  QMenuBar *rightMenuBar = new QMenuBar(menuBar);
-  rightMenuBar->setObjectName("rightMenuBar");
-  QMenu *accountMenu = rightMenuBar->addMenu(tr("Account"));
-  menuBar->setCornerWidget(rightMenuBar, Qt::TopRightCorner);
-
-  QWidget *accountWidget = new QWidget(this);
-  accountWidget->setObjectName("accountPanel");
-  QVBoxLayout *accountLayout = new QVBoxLayout(accountWidget);
-  accountLayout->setContentsMargins(10, 10, 10, 10);
-
-  QLineEdit *emailEdit = new QLineEdit(accountWidget);
-  emailEdit->setObjectName("accountEmailInput");
-  emailEdit->setPlaceholderText(tr("Email"));
-
-  QLineEdit *passwordEdit = new QLineEdit(accountWidget);
-  passwordEdit->setObjectName("accountPasswordInput");
-  passwordEdit->setPlaceholderText(tr("Password"));
-  passwordEdit->setEchoMode(QLineEdit::Password);
-
-  QPushButton *loginBtn = new QPushButton(tr("Login"), accountWidget);
-  loginBtn->setObjectName("accountLoginButton");
-
-  accountLayout->addWidget(emailEdit);
-  accountLayout->addWidget(passwordEdit);
-  accountLayout->addWidget(loginBtn);
-
-  QWidgetAction *accountDropdownAction = new QWidgetAction(this);
-  accountDropdownAction->setDefaultWidget(accountWidget);
-  accountMenu->addAction(accountDropdownAction);
 }
 
 void MainWindow::setupConnections() {

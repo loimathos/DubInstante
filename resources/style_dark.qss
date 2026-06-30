@@ -67,23 +67,6 @@ QMenuBar::item:pressed {
     color: #f3f3f6;
 }
 
-QMenuBar#rightMenuBar {
-    background: transparent;
-    border: none;
-    padding: 0;
-}
-
-QMenuBar#rightMenuBar::item {
-    color: #8a8a9e;
-    padding: 6px 10px;
-    margin: 0;
-    border-radius: 8px;
-}
-
-QMenuBar#rightMenuBar::item:selected {
-    background: #212130;
-    color: #f3f3f6;
-}
 
 QMenu {
     background: #161622;
@@ -137,43 +120,6 @@ QMenu QPushButton:hover {
 
 QMenu QPushButton:pressed {
     background: #2a2a3c;
-}
-
-QWidget#accountPanel {
-    background: #161622;
-}
-
-QLineEdit#accountEmailInput,
-QLineEdit#accountPasswordInput {
-    background: #161622;
-    color: #f3f3f6;
-    border: 1px solid #2a2a3c;
-    border-radius: 8px;
-    min-height: 28px;
-    padding: 4px 10px;
-}
-
-QLineEdit#accountEmailInput:focus,
-QLineEdit#accountPasswordInput:focus {
-    border: 1px solid #926bff;
-}
-
-QPushButton#accountLoginButton {
-    background: #926bff;
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    min-height: 30px;
-    padding: 6px 12px;
-    font-weight: 600;
-}
-
-QPushButton#accountLoginButton:hover {
-    background: #a185ff;
-}
-
-QPushButton#accountLoginButton:pressed {
-    background: #7c56f5;
 }
 
 /* Video area remains neutral and untouched structurally */
