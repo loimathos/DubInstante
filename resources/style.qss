@@ -235,21 +235,18 @@ QWidget#controlBar QPushButton#volumeMuteButton:checked {
     border: 1px solid #e2344d;
 }
 
-QWidget#controlBar QPushButton#btnPlay,
-QWidget#controlBar QPushButton#btnPause {
+QWidget#controlBar QPushButton#btnPlayPause {
     background: #121217;
     color: #ffffff;
     border-radius: 10px;
     padding: 9px 14px;
 }
 
-QWidget#controlBar QPushButton#btnPlay:hover,
-QWidget#controlBar QPushButton#btnPause:hover {
+QWidget#controlBar QPushButton#btnPlayPause:hover {
     background: #23232a;
 }
 
-QWidget#controlBar QPushButton#btnPlay:pressed,
-QWidget#controlBar QPushButton#btnPause:pressed {
+QWidget#controlBar QPushButton#btnPlayPause:pressed {
     background: #3a3a42;
 }
 

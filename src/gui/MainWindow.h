@@ -160,12 +160,12 @@ private:
 
   // Playback controls
   QPushButton *m_stepBackButton;
-  QPushButton *m_playButton;
-  QPushButton *m_pauseButton;
+  QPushButton *m_playPauseButton;
   QPushButton *m_stopButton;
   QPushButton *m_stepForwardButton;
   ClickableSlider *m_positionSlider;
   QLabel *m_timeLabel;
+  QLabel *m_recordDurationLabel;
 
   // Volume controls
   QPushButton *m_volumeMuteButton;
@@ -217,6 +217,7 @@ private:
   bool m_isFullscreenRecording;
   QStringList m_tempAudioPaths;
   QElapsedTimer m_recordingTimer;
+  QTimer *m_recordDurationTimer;
   qint64 m_lastRecordedDurationMs;
   qint64 m_recordingStartTimeMs;
 
@@ -228,7 +229,7 @@ private:
   // Preview playback
   QVector<QMediaPlayer *> m_previewPlayers;
   QVector<QAudioOutput *> m_previewOutputs;
-  QElapsedTimer m_lastSyncCorrection;
+  QVector<QElapsedTimer> m_trackSyncThrottle;
 
   // Advanced settings members
   QTimer *m_autoSaveTimer;

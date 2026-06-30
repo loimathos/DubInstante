@@ -25,6 +25,7 @@
 #include <QGuiApplication>
 #include <QMediaDevices>
 #include <QAudioDevice>
+#include <QVideoSink>
 
 // Utils includes
 #include "TimeFormatter.h"
@@ -256,13 +257,9 @@ void MainWindow::setupUi() {
   m_stepBackButton->setToolTip("Reculer (1 frame)");
   m_stepBackButton->setMinimumSize(32, 32);
 
-  m_playButton = new QPushButton(QIcon(":/resources/icons/play.svg"), " PLAY", controlBar);
-  m_playButton->setObjectName("btnPlay");
-  m_playButton->setProperty("class", "btn");
-
-  m_pauseButton = new QPushButton(QIcon(":/resources/icons/pause.svg"), " PAUSE", controlBar);
-  m_pauseButton->setObjectName("btnPause");
-  m_pauseButton->setProperty("class", "btn");
+  m_playPauseButton = new QPushButton(QIcon(":/resources/icons/play.svg"), " PLAY", controlBar);
+  m_playPauseButton->setObjectName("btnPlayPause");
+  m_playPauseButton->setProperty("class", "btn");
 
   m_stopButton = new QPushButton("⏹ STOP", controlBar);
   m_stopButton->setObjectName("btnStop");
@@ -280,8 +277,7 @@ void MainWindow::setupUi() {
   QHBoxLayout *group1Layout = new QHBoxLayout();
   group1Layout->setSpacing(8);
   group1Layout->addWidget(m_stepBackButton);
-  group1Layout->addWidget(m_playButton);
-  group1Layout->addWidget(m_pauseButton);
+  group1Layout->addWidget(m_playPauseButton);
   group1Layout->addWidget(m_stopButton);
   group1Layout->addWidget(m_stepForwardButton);
   group1Layout->addWidget(m_timeLabel);
@@ -335,6 +331,19 @@ void MainWindow::setupUi() {
   m_recordButton->setCursor(Qt::PointingHandCursor);
   group2Layout->addWidget(m_recordButton);
 
+  m_recordDurationLabel = new QLabel("00:00", controlBar);
+  m_recordDurationLabel->setObjectName("recordDurationLabel");
+  m_recordDurationLabel->setStyleSheet("color: #ff4d66; font-weight: bold; margin-left: 8px;");
+  m_recordDurationLabel->setVisible(false);
+  group2Layout->addWidget(m_recordDurationLabel);
+
+  m_recordDurationTimer = new QTimer(this);
+  connect(m_recordDurationTimer, &QTimer::timeout, this, [this]() {
+      if (m_isRecording) {
+          qint64 elapsed = m_recordingTimer.elapsed();
+          m_recordDurationLabel->setText(TimeFormatter::format(elapsed));
+      }
+  });
   controlBarLayout->addLayout(group2Layout);
   controlBarLayout->addStretch();
 
@@ -563,12 +572,12 @@ void MainWindow::setupConnections() {
   // Playback Controls
   // =========================================================================
 
-  connect(m_playButton, &QPushButton::clicked, this, [this]() {
-    m_playbackEngine->play();
-  });
-
-  connect(m_pauseButton, &QPushButton::clicked, this, [this]() {
-    m_playbackEngine->pause();
+  connect(m_playPauseButton, &QPushButton::clicked, this, [this]() {
+    if (m_playbackEngine->playbackState() == QMediaPlayer::PlayingState) {
+      m_playbackEngine->pause();
+    } else {
+      m_playbackEngine->play();
+    }
   });
 
   connect(m_stepBackButton, &QPushButton::clicked, this, [this]() {
@@ -802,6 +811,7 @@ void MainWindow::setTrackCount(int count) {
     m_hasRecording.append(false);
     m_trackRecordStartMs.append(0);
     m_trackRecordDurationMs.append(0);
+    m_trackSyncThrottle.append(QElapsedTimer());
 
     // Create Preview Player & Output
     auto *audioOutput = new QAudioOutput(this);
@@ -810,6 +820,7 @@ void MainWindow::setTrackCount(int count) {
 
     auto *player = new QMediaPlayer(this);
     player->setAudioOutput(audioOutput);
+    player->setVideoSink(new QVideoSink(player)); // Prevent spawning new window for audio
 
     m_previewPlayers.append(player);
     m_previewOutputs.append(audioOutput);
@@ -903,6 +914,7 @@ void MainWindow::setTrackCount(int count) {
     m_hasRecording.removeLast();
     m_trackRecordStartMs.removeLast();
     m_trackRecordDurationMs.removeLast();
+    m_trackSyncThrottle.removeLast();
 
     // Clean up preview player
     QMediaPlayer *previewPlayer = m_previewPlayers.takeLast();
@@ -1249,26 +1261,52 @@ void MainWindow::onDurationChanged(qint64 duration) {
 }
 
 void MainWindow::onPlaybackStateChanged(QMediaPlayer::PlaybackState state) {
-
+  if (state == QMediaPlayer::PlayingState) {
+    m_playPauseButton->setIcon(QIcon(":/resources/icons/pause.svg"));
+    m_playPauseButton->setText(" PAUSE");
+  } else {
+    m_playPauseButton->setIcon(QIcon(":/resources/icons/play.svg"));
+    m_playPauseButton->setText(" PLAY");
+  }
 }
 
 void MainWindow::handlePreviewSync(qint64 masterPosition) {
-    // Throttle: max 1 correction per second
-    if (m_lastSyncCorrection.isValid() && m_lastSyncCorrection.elapsed() < 1000) {
-        return;
-    }
-
     for (int i = 0; i < m_previewPlayers.size(); ++i) {
         QMediaPlayer *player = m_previewPlayers[i];
-        if (player->playbackState() != QMediaPlayer::PlayingState) continue;
         if (!m_hasRecording.value(i, false)) continue;
+        if (m_isRecording && m_trackPanels[i]->isArmed()) continue;
 
-        qint64 drift = qAbs(player->position() - masterPosition);
-        if (drift > 150) { // 150ms threshold
+        qint64 startMs = m_trackRecordStartMs.value(i, 0);
+        qint64 durMs = m_trackRecordDurationMs.value(i, 0);
+        qint64 targetPos = masterPosition - startMs;
+
+        // The track is active only inside its own [start, start+duration] window.
+        // Outside it (before the punch-in point or after the take has ended) the
+        // preview must stay paused — restarting a finished player would replay it
+        // from the beginning.
+        bool active = targetPos >= 0 && (durMs <= 0 || targetPos < durMs);
+
+        if (active && m_playbackEngine->playbackState() == QMediaPlayer::PlayingState) {
+            if (player->playbackState() != QMediaPlayer::PlayingState) {
+                // Crossing into the track's window: start it.
+                player->blockSignals(true);
+                player->setPosition(targetPos);
+                player->play();
+                player->blockSignals(false);
+            } else {
+                qint64 drift = qAbs(player->position() - targetPos);
+                QElapsedTimer &throttle = m_trackSyncThrottle[i];
+                if (drift > 150 && (!throttle.isValid() || throttle.elapsed() >= 1000)) {
+                    player->blockSignals(true);
+                    player->setPosition(targetPos);
+                    player->blockSignals(false);
+                    throttle.restart();
+                }
+            }
+        } else if (player->playbackState() == QMediaPlayer::PlayingState) {
             player->blockSignals(true);
-            player->setPosition(masterPosition);
+            player->pause();
             player->blockSignals(false);
-            m_lastSyncCorrection.restart();
         }
     }
 }
@@ -1283,13 +1321,21 @@ void MainWindow::handlePreviewStateChange(QMediaPlayer::PlaybackState state) {
 
         player->blockSignals(true);
         switch (state) {
-            case QMediaPlayer::PlayingState:
+            case QMediaPlayer::PlayingState: {
                 if (player->source().isEmpty()) {
                     refreshPreviewSources();
                 }
-                player->setPosition(m_playbackEngine->position());
-                player->play();
+                qint64 startMs = m_trackRecordStartMs.value(i, 0);
+                qint64 durMs = m_trackRecordDurationMs.value(i, 0);
+                qint64 targetPos = m_playbackEngine->position() - startMs;
+                if (targetPos >= 0 && (durMs <= 0 || targetPos < durMs)) {
+                    player->setPosition(targetPos);
+                    player->play();
+                } else {
+                    player->pause();
+                }
                 break;
+            }
             case QMediaPlayer::PausedState:
                 player->pause();
                 break;
@@ -1388,6 +1434,8 @@ void MainWindow::toggleRecording() {
     m_lastRecordedDurationMs = m_recordingTimer.elapsed();
 
     m_isRecording = false;
+    m_recordDurationTimer->stop();
+    m_recordDurationLabel->setVisible(false);
     m_recordButton->setChecked(false);
     m_recordButton->setText("REC GLOBAL");
     m_actionOpenMp4->setEnabled(true);
@@ -1956,11 +2004,20 @@ void MainWindow::startRecordingProcess() {
       m_trackPanels[i]->setRecordingState("recording");
 
     } else if (m_hasRecording.value(i, false)) {
-      // --- UNARMED with existing recording: Play back old take ---
+      // --- UNARMED with existing recording: Play back old take in sync ---
+      // The take lives on the master timeline at [start, start+duration]; only
+      // start it now if the punch-in point already falls inside that window.
+      // handlePreviewSync() will start it later otherwise.
+      qint64 startMs = m_trackRecordStartMs.value(i, 0);
+      qint64 durMs = m_trackRecordDurationMs.value(i, 0);
+      qint64 targetPos = m_recordingStartTimeMs - startMs;
+
       m_previewPlayers[i]->setSource(
           QUrl::fromLocalFile(m_tempAudioPaths[i]));
-      m_previewPlayers[i]->setPosition(m_recordingStartTimeMs);
-      m_previewPlayers[i]->play();
+      if (targetPos >= 0 && (durMs <= 0 || targetPos < durMs)) {
+        m_previewPlayers[i]->setPosition(targetPos);
+        m_previewPlayers[i]->play();
+      }
 
       // Visual feedback
       m_trackPanels[i]->setRecordingState("playing");
@@ -1977,6 +2034,9 @@ void MainWindow::startRecordingProcess() {
 
   m_playbackEngine->play();
   m_recordingTimer.start();
+  m_recordDurationLabel->setText("00:00");
+  m_recordDurationLabel->setVisible(true);
+  m_recordDurationTimer->start(100);
 
   m_isRecording = true;
   m_recordButton->setEnabled(true);

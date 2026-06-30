@@ -4,6 +4,7 @@
  */
 
 #include "AudioRecorder.h"
+#include <QMediaFormat>
 #include <QtEndian>
 #include <cmath>
 
@@ -18,6 +19,15 @@ AudioRecorder::AudioRecorder(QObject *parent)
     // Configure the capture session
     m_captureSession.setAudioInput(m_audioInput);
     m_captureSession.setRecorder(m_recorder);
+
+    // Force uncompressed WAV/PCM output. Without an explicit format QMediaRecorder
+    // defaults to an MPEG-4 container and rewrites the output path (e.g.
+    // "temp_dub_1.wav" -> "temp_dub_1.wav.m4a"), which the preview, save and
+    // export pipelines — all of which expect a literal ".wav" — then fail to find.
+    QMediaFormat mediaFormat;
+    mediaFormat.setFileFormat(QMediaFormat::FileFormat::Wave);
+    mediaFormat.setAudioCodec(QMediaFormat::AudioCodec::Wave);
+    m_recorder->setMediaFormat(mediaFormat);
 
     // Forward recorder signals
     connect(m_recorder, &QMediaRecorder::durationChanged,
