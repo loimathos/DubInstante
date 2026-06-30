@@ -419,10 +419,7 @@ void MainWindow::createMenus() {
   m_actionFullscreen->setCheckable(true);
   appMenu->addAction(m_actionFullscreen);
 
-  m_actionShortcuts = new QAction(tr("Changer raccourcis"), this);
-  connect(m_actionShortcuts, &QAction::triggered, this,
-          &MainWindow::showShortcutsPopup);
-  appMenu->addAction(m_actionShortcuts);
+
 
   m_actionGlobalSettings = new QAction(tr("Paramètre global"), this);
   appMenu->addAction(m_actionGlobalSettings);
@@ -1221,28 +1218,41 @@ void MainWindow::exitFullscreenRecording() {
 // =============================================================================
 
 void MainWindow::setupShortcuts() {
-  // Ctrl+S: Stop recording
-  QShortcut *stopRecShortcut = new QShortcut(QKeySequence("Ctrl+S"), this);
-  stopRecShortcut->setContext(Qt::ApplicationShortcut);
-  connect(stopRecShortcut, &QShortcut::activated, this, [this]() {
-    if (m_isRecording) {
+  m_shRecordStart = new QShortcut(this);
+  m_shRecordStart->setContext(Qt::ApplicationShortcut);
+  connect(m_shRecordStart, &QShortcut::activated, this, [this]() {
+    if (!m_isRecording && !m_countdownTimer->isActive()) {
       toggleRecording();
     }
   });
 
-  // Build persistent shortcuts menu
-  m_shortcutsMenu = new QMenu(tr("Raccourcis Clavier"), this);
-  m_shortcutsMenu->addAction("Ctrl+S — " + tr("Arrêter l'enregistrement"));
-  m_shortcutsMenu->addSeparator();
-  m_shortcutsMenu->addAction("Space — " + tr("Lecture / Pause"));
-  m_shortcutsMenu->addAction("← / → — " + tr("Image par image"));
-  m_shortcutsMenu->addAction("Esc — " + tr("Insérer espace + lecture"));
-  m_shortcutsMenu->addAction("Backspace — " + tr("Supprimer caractère"));
+  m_shRecordStop = new QShortcut(this);
+  m_shRecordStop->setContext(Qt::ApplicationShortcut);
+  connect(m_shRecordStop, &QShortcut::activated, this, [this]() {
+    if (m_isRecording || m_countdownTimer->isActive()) {
+      toggleRecording();
+    }
+  });
+
+  applyShortcuts();
 }
 
-void MainWindow::showShortcutsPopup() {
-  m_shortcutsMenu->popup(QCursor::pos());
+void MainWindow::applyShortcuts() {
+  SettingsManager &sm = SettingsManager::instance();
+  m_shRecordStart->setKey(sm.shortcut("record_start"));
+  m_shRecordStop->setKey(sm.shortcut("record_stop"));
+
+  m_shortcutPlayPause = sm.shortcut("video_play_pause");
+  m_shortcutFrameBack = sm.shortcut("video_frame_back");
+  m_shortcutFrameForward = sm.shortcut("video_frame_forward");
+  m_shortcutSeekBack5s = sm.shortcut("video_seek_back_5s");
+  m_shortcutSeekForward5s = sm.shortcut("video_seek_forward_5s");
+  m_shortcutVolumeUp = sm.shortcut("audio_volume_up");
+  m_shortcutVolumeDown = sm.shortcut("audio_volume_down");
+  m_shortcutVolumeMute = sm.shortcut("audio_volume_mute");
 }
+
+
 
 // =============================================================================
 // Slots - Export
@@ -1404,32 +1414,93 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     return;
   }
 
-  // Global Play/Pause via Space
-  if (event->key() == Qt::Key_Space) {
-    if (m_playbackEngine->playbackState() == QMediaPlayer::PlayingState) {
-      m_playbackEngine->pause();
-    } else {
-      m_playbackEngine->play();
-    }
-    event->accept();
+  // Resolve modifiers & key combo
+  int key = event->key();
+  if (key == Qt::Key_Control || key == Qt::Key_Shift || key == Qt::Key_Alt || key == Qt::Key_Meta) {
+    QMainWindow::keyPressEvent(event);
     return;
   }
 
-  // Frame-by-frame navigation
-  qreal fps = m_playbackEngine->videoFrameRate();
-  int frameStep = (fps > 0) ? static_cast<int>(1000.0 / fps) : 40;
+  int keyCombo = key;
+  Qt::KeyboardModifiers modifiers = event->modifiers();
+  if (modifiers & Qt::ShiftModifier)   keyCombo |= Qt::SHIFT;
+  if (modifiers & Qt::ControlModifier) keyCombo |= Qt::CTRL;
+  if (modifiers & Qt::AltModifier)     keyCombo |= Qt::ALT;
+  if (modifiers & Qt::MetaModifier)    keyCombo |= Qt::META;
 
-  if (event->key() == Qt::Key_Left) {
-    // Only intercept if we are not in an input widget
-    if (!focusWidget() || !focusWidget()->inherits("QAbstractSpinBox")) {
-      m_playbackEngine->seek(m_playbackEngine->position() - frameStep);
+  QKeySequence pressedSeq(keyCombo);
+
+  // Ignore auto-repeat for toggle/state actions (security rule)
+  if (event->isAutoRepeat()) {
+    if (pressedSeq == m_shortcutPlayPause ||
+        pressedSeq == m_shortcutVolumeMute ||
+        pressedSeq == SettingsManager::instance().shortcut("record_start") ||
+        pressedSeq == SettingsManager::instance().shortcut("record_stop")) {
       event->accept();
       return;
     }
-  } else if (event->key() == Qt::Key_Right) {
-    // Only intercept if we are not in an input widget
-    if (!focusWidget() || !focusWidget()->inherits("QAbstractSpinBox")) {
-      m_playbackEngine->seek(m_playbackEngine->position() + frameStep);
+  }
+
+  // Check focus context to prevent typing/editing interference
+  QWidget *fw = focusWidget();
+  bool inInput = fw && (fw->inherits("QLineEdit") ||
+                        fw->inherits("QTextEdit") ||
+                        fw->inherits("QAbstractSpinBox") ||
+                        fw->inherits("RythmoWidget"));
+
+  if (!inInput) {
+    if (!m_shortcutPlayPause.isEmpty() && pressedSeq == m_shortcutPlayPause) {
+      if (m_playbackEngine->playbackState() == QMediaPlayer::PlayingState) {
+        m_playbackEngine->pause();
+      } else {
+        m_playbackEngine->play();
+      }
+      event->accept();
+      return;
+    }
+
+    if (!m_shortcutFrameBack.isEmpty() && pressedSeq == m_shortcutFrameBack) {
+      qreal fps = m_playbackEngine->videoFrameRate();
+      int frameStep = (fps > 0) ? static_cast<int>(1000.0 / fps) : 40;
+      m_playbackEngine->seek(qMax(0LL, m_playbackEngine->position() - frameStep));
+      event->accept();
+      return;
+    }
+
+    if (!m_shortcutFrameForward.isEmpty() && pressedSeq == m_shortcutFrameForward) {
+      qreal fps = m_playbackEngine->videoFrameRate();
+      int frameStep = (fps > 0) ? static_cast<int>(1000.0 / fps) : 40;
+      m_playbackEngine->seek(qMin(m_playbackEngine->duration(), m_playbackEngine->position() + frameStep));
+      event->accept();
+      return;
+    }
+
+    if (!m_shortcutSeekBack5s.isEmpty() && pressedSeq == m_shortcutSeekBack5s) {
+      m_playbackEngine->seek(qMax(0LL, m_playbackEngine->position() - 5000));
+      event->accept();
+      return;
+    }
+
+    if (!m_shortcutSeekForward5s.isEmpty() && pressedSeq == m_shortcutSeekForward5s) {
+      m_playbackEngine->seek(qMin(m_playbackEngine->duration(), m_playbackEngine->position() + 5000));
+      event->accept();
+      return;
+    }
+
+    if (!m_shortcutVolumeUp.isEmpty() && pressedSeq == m_shortcutVolumeUp) {
+      m_volumeSlider->setValue(qMin(100, m_volumeSlider->value() + 5));
+      event->accept();
+      return;
+    }
+
+    if (!m_shortcutVolumeDown.isEmpty() && pressedSeq == m_shortcutVolumeDown) {
+      m_volumeSlider->setValue(qMax(0, m_volumeSlider->value() - 5));
+      event->accept();
+      return;
+    }
+
+    if (!m_shortcutVolumeMute.isEmpty() && pressedSeq == m_shortcutVolumeMute) {
+      m_volumeMuteButton->click();
       event->accept();
       return;
     }
@@ -1443,7 +1514,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 // =============================================================================
 
 void MainWindow::onOpenGlobalSettings() {
-  GlobalSettingsDialog dialog(this);
+  GlobalSettingsDialog dialog(this, 0);
   if (dialog.exec() == QDialog::Accepted) {
     SettingsManager &sm = SettingsManager::instance();
     
@@ -1471,6 +1542,9 @@ void MainWindow::onOpenGlobalSettings() {
         }
       }
     }
+
+    // Apply shortcuts
+    applyShortcuts();
     
     statusBar()->showMessage(tr("Paramètres mis à jour"), 3000);
   }

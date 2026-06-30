@@ -10,12 +10,41 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QFrame>
+#include <QScrollArea>
+#include <QStyle>
+#include <QKeyEvent>
 
-GlobalSettingsDialog::GlobalSettingsDialog(QWidget *parent)
-    : QDialog(parent) {
+GlobalSettingsDialog::GlobalSettingsDialog(QWidget *parent, int initialTab)
+    : QDialog(parent), m_activeButton(nullptr) {
+    
+    // Group definitions
+    m_videoActions = {
+        "video_play_pause",
+        "video_frame_back",
+        "video_frame_forward",
+        "video_seek_back_5s",
+        "video_seek_forward_5s"
+    };
+
+    m_recordActions = {
+        "record_start",
+        "record_stop"
+    };
+
+    m_audioActions = {
+        "audio_volume_up",
+        "audio_volume_down",
+        "audio_volume_mute"
+    };
+
     setupUi();
     populateAudioDevices();
     loadSettings();
+
+    // Switch to initial tab
+    if (initialTab >= 0 && initialTab < m_tabButtons.size()) {
+        m_tabButtons[initialTab]->click();
+    }
 }
 
 void GlobalSettingsDialog::setupUi() {
@@ -51,7 +80,7 @@ void GlobalSettingsDialog::setupUi() {
     m_tabGroup = new QButtonGroup(this);
     m_tabGroup->setExclusive(true);
 
-    QStringList tabLabels = { tr("Général"), tr("Audio & Micros") };
+    QStringList tabLabels = { tr("Général"), tr("Audio & Micros"), tr("Raccourcis Clavier") };
     for (int i = 0; i < tabLabels.size(); ++i) {
         QPushButton *btn = new QPushButton(tabLabels[i], sidebar);
         btn->setCheckable(true);
@@ -194,6 +223,95 @@ void GlobalSettingsDialog::setupUi() {
     audLayout->addStretch();
     m_stackedWidget->addWidget(audioPage);
 
+    // ==========================================
+    // TAB 3: Shortcuts Settings
+    // ==========================================
+    QFrame *shortcutsPage = new QFrame(m_stackedWidget);
+    shortcutsPage->setObjectName("settingsCard");
+    QVBoxLayout *shortcutsLayout = new QVBoxLayout(shortcutsPage);
+    shortcutsLayout->setContentsMargins(18, 18, 18, 18);
+    shortcutsLayout->setSpacing(12);
+
+    // Scroll Area for Shortcuts
+    QScrollArea *scrollArea = new QScrollArea(shortcutsPage);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setStyleSheet("background: transparent;");
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    QWidget *scrollContent = new QWidget(scrollArea);
+    scrollContent->setStyleSheet("background: transparent;");
+    QVBoxLayout *scrollLayout = new QVBoxLayout(scrollContent);
+    scrollLayout->setContentsMargins(0, 0, 0, 0);
+    scrollLayout->setSpacing(14);
+
+    // Helper function to create categories in the settings panel
+    auto createCategoryGroup = [this, shortcutsPage](const QString &title, const QStringList &actions, QVBoxLayout *parentLayout) {
+        QGroupBox *group = new QGroupBox(title, shortcutsPage);
+        QGridLayout *gridLayout = new QGridLayout(group);
+        gridLayout->setContentsMargins(14, 20, 14, 14);
+        gridLayout->setHorizontalSpacing(12);
+        gridLayout->setVerticalSpacing(10);
+
+        int row = 0;
+        for (const QString &actionId : actions) {
+            // Label
+            QLabel *label = new QLabel(getActionName(actionId), group);
+            label->setProperty("cssClass", "fineLabel");
+            gridLayout->addWidget(label, row, 0);
+
+            // Shortcut button
+            QPushButton *shortcutBtn = new QPushButton(group);
+            shortcutBtn->setProperty("cssClass", "presetButton");
+            shortcutBtn->setMinimumHeight(30);
+            shortcutBtn->setMinimumWidth(150);
+            shortcutBtn->setCursor(Qt::PointingHandCursor);
+            connect(shortcutBtn, &QPushButton::clicked, this, [this, actionId]() {
+                onShortcutButtonClicked(actionId);
+            });
+            m_shortcutButtons[actionId] = shortcutBtn;
+            gridLayout->addWidget(shortcutBtn, row, 1);
+
+            // Clear button
+            QPushButton *clearBtn = new QPushButton("×", group);
+            clearBtn->setProperty("cssClass", "shortcutClearButton");
+            clearBtn->setFixedSize(30, 30);
+            clearBtn->setCursor(Qt::PointingHandCursor);
+            clearBtn->setToolTip(tr("Supprimer le raccourci"));
+            connect(clearBtn, &QPushButton::clicked, this, [this, actionId]() {
+                onClearShortcut(actionId);
+            });
+            m_clearButtons[actionId] = clearBtn;
+            gridLayout->addWidget(clearBtn, row, 2);
+
+            row++;
+        }
+        gridLayout->setColumnStretch(0, 1); // Expand the label column
+        parentLayout->addWidget(group);
+    };
+
+    createCategoryGroup(tr("Contrôles Vidéo"), m_videoActions, scrollLayout);
+    createCategoryGroup(tr("Enregistrement"), m_recordActions, scrollLayout);
+    createCategoryGroup(tr("Contrôles Audio"), m_audioActions, scrollLayout);
+
+    scrollArea->setWidget(scrollContent);
+    shortcutsLayout->addWidget(scrollArea, 1);
+
+    // Reset Defaults Row in shortcuts tab
+    QHBoxLayout *resetRow = new QHBoxLayout();
+    QPushButton *resetBtn = new QPushButton(tr("Rétablir raccourcis par défaut"), shortcutsPage);
+    resetBtn->setObjectName("settingsCancelButton");
+    resetBtn->setMinimumHeight(32);
+    resetBtn->setMinimumWidth(200);
+    resetBtn->setCursor(Qt::PointingHandCursor);
+    connect(resetBtn, &QPushButton::clicked, this, &GlobalSettingsDialog::onResetShortcutsToDefaults);
+    resetRow->addWidget(resetBtn);
+    resetRow->addStretch();
+    shortcutsLayout->addLayout(resetRow);
+
+    m_stackedWidget->addWidget(shortcutsPage);
+
     bodyLayout->addWidget(m_stackedWidget, 1);
     mainLayout->addLayout(bodyLayout);
 
@@ -269,6 +387,13 @@ void GlobalSettingsDialog::loadSettings() {
             count++;
         }
     }
+
+    // Load shortcuts
+    QStringList allActions = m_videoActions + m_recordActions + m_audioActions;
+    for (const QString &actionId : allActions) {
+        m_tempShortcuts[actionId] = sm.shortcut(actionId);
+    }
+    updateShortcutButtons();
 }
 
 void GlobalSettingsDialog::addPreferredOutput() {
@@ -337,5 +462,182 @@ void GlobalSettingsDialog::saveSettings() {
     }
     sm.setPreferredOutputs(outputs);
 
+    // Save shortcuts
+    for (auto it = m_tempShortcuts.begin(); it != m_tempShortcuts.end(); ++it) {
+        sm.setShortcut(it.key(), it.value());
+    }
+
     accept();
+}
+
+void GlobalSettingsDialog::updateShortcutButtons() {
+    for (auto it = m_tempShortcuts.begin(); it != m_tempShortcuts.end(); ++it) {
+        QString actionId = it.key();
+        QKeySequence seq = it.value();
+        
+        QPushButton *btn = m_shortcutButtons.value(actionId, nullptr);
+        if (btn) {
+            if (seq.isEmpty()) {
+                btn->setText(tr("Aucun"));
+                btn->setStyleSheet("color: #8a8a9e; font-style: italic;");
+            } else {
+                btn->setText(seq.toString(QKeySequence::NativeText));
+                btn->setStyleSheet(""); // reset to stylesheet default
+            }
+        }
+    }
+}
+
+QString GlobalSettingsDialog::getActionName(const QString &actionId) const {
+    if (actionId == "video_play_pause") return tr("Lecture / Pause");
+    if (actionId == "video_frame_back") return tr("Reculer d'une image (Précédent)");
+    if (actionId == "video_frame_forward") return tr("Avancer d'une image (Suivant)");
+    if (actionId == "video_seek_back_5s") return tr("Reculer de 5 secondes");
+    if (actionId == "video_seek_forward_5s") return tr("Avancer de 5 secondes");
+    if (actionId == "record_start") return tr("Démarrer l'enregistrement");
+    if (actionId == "record_stop") return tr("Arrêter l'enregistrement");
+    if (actionId == "audio_volume_up") return tr("Augmenter le volume");
+    if (actionId == "audio_volume_down") return tr("Diminuer le volume");
+    if (actionId == "audio_volume_mute") return tr("Couper / Activer le son (Mute)");
+    return actionId;
+}
+
+void GlobalSettingsDialog::onShortcutButtonClicked(const QString &actionId) {
+    if (!m_capturingActionId.isEmpty()) {
+        stopCapture(false);
+    }
+    startCapture(actionId);
+}
+
+void GlobalSettingsDialog::onClearShortcut(const QString &actionId) {
+    if (m_capturingActionId == actionId) {
+        stopCapture(false);
+    }
+    m_tempShortcuts[actionId] = QKeySequence();
+    updateShortcutButtons();
+}
+
+void GlobalSettingsDialog::startCapture(const QString &actionId) {
+    m_capturingActionId = actionId;
+    m_activeButton = m_shortcutButtons.value(actionId, nullptr);
+    
+    if (m_activeButton) {
+        m_activeButton->setText(tr("Appuyez sur une touche..."));
+        m_activeButton->setProperty("capturing", true);
+        m_activeButton->style()->unpolish(m_activeButton);
+        m_activeButton->style()->polish(m_activeButton);
+        m_activeButton->setFocus();
+    }
+    
+    grabKeyboard();
+}
+
+void GlobalSettingsDialog::stopCapture(bool acceptInput, const QKeySequence &seq) {
+    releaseKeyboard();
+    
+    if (acceptInput && !m_capturingActionId.isEmpty()) {
+        m_tempShortcuts[m_capturingActionId] = seq;
+    }
+    
+    if (m_activeButton) {
+        m_activeButton->setProperty("capturing", false);
+        m_activeButton->style()->unpolish(m_activeButton);
+        m_activeButton->style()->polish(m_activeButton);
+    }
+
+    m_capturingActionId.clear();
+    m_activeButton = nullptr;
+    
+    updateShortcutButtons();
+}
+
+bool GlobalSettingsDialog::checkConflict(const QKeySequence &seq, const QString &currentActionId) {
+    if (seq.isEmpty()) return false;
+
+    for (auto it = m_tempShortcuts.begin(); it != m_tempShortcuts.end(); ++it) {
+        if (it.key() != currentActionId && it.value() == seq) {
+            QString otherActionName = getActionName(it.key());
+            QMessageBox::StandardButton reply = QMessageBox::question(
+                this,
+                tr("Conflit de raccourci"),
+                tr("Le raccourci '%1' est déjà attribué à '%2'.\n\nVoulez-vous le réattribuer à cette action et libérer l'autre ?")
+                    .arg(seq.toString(QKeySequence::NativeText), otherActionName),
+                QMessageBox::Yes | QMessageBox::No
+            );
+            
+            if (reply == QMessageBox::Yes) {
+                m_tempShortcuts[it.key()] = QKeySequence();
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void GlobalSettingsDialog::keyPressEvent(QKeyEvent *event) {
+    if (!m_capturingActionId.isEmpty()) {
+        int key = event->key();
+        
+        if (key == Qt::Key_Control || key == Qt::Key_Shift || key == Qt::Key_Alt || key == Qt::Key_Meta) {
+            event->accept();
+            return;
+        }
+
+        if (key == Qt::Key_Escape && event->modifiers() == Qt::NoModifier) {
+            stopCapture(false);
+            event->accept();
+            return;
+        }
+
+        int keyCombo = key;
+        Qt::KeyboardModifiers modifiers = event->modifiers();
+        
+        if (modifiers & Qt::ShiftModifier)   keyCombo |= Qt::SHIFT;
+        if (modifiers & Qt::ControlModifier) keyCombo |= Qt::CTRL;
+        if (modifiers & Qt::AltModifier)     keyCombo |= Qt::ALT;
+        if (modifiers & Qt::MetaModifier)    keyCombo |= Qt::META;
+
+        QKeySequence seq(keyCombo);
+        
+        if (!checkConflict(seq, m_capturingActionId)) {
+            stopCapture(true, seq);
+        } else {
+            stopCapture(false);
+        }
+        
+        event->accept();
+        return;
+    }
+    
+    QDialog::keyPressEvent(event);
+}
+
+void GlobalSettingsDialog::mousePressEvent(QMouseEvent *event) {
+    if (!m_capturingActionId.isEmpty()) {
+        stopCapture(false);
+        event->accept();
+        return;
+    }
+    QDialog::mousePressEvent(event);
+}
+
+void GlobalSettingsDialog::onResetShortcutsToDefaults() {
+    SettingsManager &sm = SettingsManager::instance();
+    QStringList allActions = m_videoActions + m_recordActions + m_audioActions;
+    
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        tr("Rétablir par défaut"),
+        tr("Voulez-vous rétablir tous les raccourcis à leurs valeurs par défaut ?"),
+        QMessageBox::Yes | QMessageBox::No
+    );
+    
+    if (reply == QMessageBox::Yes) {
+        for (const QString &actionId : allActions) {
+            m_tempShortcuts[actionId] = sm.defaultShortcut(actionId);
+        }
+        updateShortcutButtons();
+    }
 }

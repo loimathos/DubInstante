@@ -96,3 +96,38 @@ void SettingsManager::setExpertMode(bool enabled) {
     QSettings settings;
     settings.setValue("expert_mode", enabled);
 }
+
+QKeySequence SettingsManager::defaultShortcut(const QString &actionId) const {
+    if (actionId == "video_play_pause") return QKeySequence(Qt::Key_Space);
+    if (actionId == "video_frame_back") return QKeySequence(Qt::Key_Left);
+    if (actionId == "video_frame_forward") return QKeySequence(Qt::Key_Right);
+    if (actionId == "video_seek_back_5s") return QKeySequence(Qt::SHIFT | Qt::Key_Left);
+    if (actionId == "video_seek_forward_5s") return QKeySequence(Qt::SHIFT | Qt::Key_Right);
+    if (actionId == "record_start") return QKeySequence("Ctrl+R");
+    if (actionId == "record_stop") return QKeySequence("Ctrl+S");
+    if (actionId == "audio_volume_up") return QKeySequence(Qt::Key_Up);
+    if (actionId == "audio_volume_down") return QKeySequence(Qt::Key_Down);
+    if (actionId == "audio_volume_mute") return QKeySequence("M");
+    return QKeySequence();
+}
+
+QKeySequence SettingsManager::shortcut(const QString &actionId) const {
+    QSettings settings;
+    if (!settings.contains("shortcuts/" + actionId)) {
+        return defaultShortcut(actionId);
+    }
+    QString val = settings.value("shortcuts/" + actionId).toString();
+    if (val == "none" || val.isEmpty()) {
+        return QKeySequence();
+    }
+    return QKeySequence(val);
+}
+
+void SettingsManager::setShortcut(const QString &actionId, const QKeySequence &sequence) {
+    QSettings settings;
+    if (sequence.isEmpty()) {
+        settings.setValue("shortcuts/" + actionId, "none");
+    } else {
+        settings.setValue("shortcuts/" + actionId, sequence.toString());
+    }
+}

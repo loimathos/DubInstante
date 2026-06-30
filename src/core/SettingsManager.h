@@ -5,6 +5,7 @@
 #include <QString>
 #include <QStringList>
 #include <QSettings>
+#include <QKeySequence>
 
 /**
  * @class SettingsManager
@@ -50,6 +51,11 @@ public:
     // Expert mode persistence
     bool expertMode() const;
     void setExpertMode(bool enabled);
+
+    // Shortcuts management
+    QKeySequence shortcut(const QString &actionId) const;
+    void setShortcut(const QString &actionId, const QKeySequence &sequence);
+    QKeySequence defaultShortcut(const QString &actionId) const;
 
 private:
     explicit SettingsManager(QObject *parent = nullptr);

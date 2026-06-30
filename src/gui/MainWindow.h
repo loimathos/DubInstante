@@ -119,10 +119,10 @@ private:
   void createMenus();
   void setupConnections();
   void setupShortcuts();
+  void applyShortcuts();
   void loadStylesheet();
   void enterFullscreenRecording();
   void exitFullscreenRecording();
-  void showShortcutsPopup();
 
   // Dynamic track management
   void setTrackCount(int count);
@@ -188,7 +188,6 @@ private:
 
   QAction *m_actionExpertMode;
   QAction *m_actionFullscreen;
-  QAction *m_actionShortcuts;
   QAction *m_actionGlobalSettings;
 
   QAction *m_actionPersonalizeRythmo;
@@ -216,6 +215,18 @@ private:
   QLabel *m_countdownLabel;
   QTimer *m_countdownTimer;
   int m_countdownRemaining;
+
+  // Shortcuts members
+  QShortcut *m_shRecordStart;
+  QShortcut *m_shRecordStop;
+  QKeySequence m_shortcutPlayPause;
+  QKeySequence m_shortcutFrameBack;
+  QKeySequence m_shortcutFrameForward;
+  QKeySequence m_shortcutSeekBack5s;
+  QKeySequence m_shortcutSeekForward5s;
+  QKeySequence m_shortcutVolumeUp;
+  QKeySequence m_shortcutVolumeDown;
+  QKeySequence m_shortcutVolumeMute;
 };
 
 #endif // MAINWINDOW_H

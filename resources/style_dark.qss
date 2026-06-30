@@ -478,15 +478,17 @@ QProgressBar::chunk {
     border-radius: 6px;
 }
 
-/* Track settings dialog & Global Settings Dialog & Export Settings Dialog */
+/* Track settings dialog & Global Settings Dialog & Shortcuts Dialog & Export Settings Dialog */
 QDialog#trackSettingsDialog,
 QDialog#globalSettingsDialog,
+QDialog#shortcutsDialog,
 QDialog#exportSettingsDialog {
     background: #0d0d12;
 }
 
 QDialog#trackSettingsDialog QLabel#settingsDialogTitle,
 QDialog#globalSettingsDialog QLabel#settingsDialogTitle,
+QDialog#shortcutsDialog QLabel#settingsDialogTitle,
 QDialog#exportSettingsDialog QLabel#settingsDialogTitle {
     font-size: 18px;
     font-weight: 700;
@@ -495,6 +497,7 @@ QDialog#exportSettingsDialog QLabel#settingsDialogTitle {
 
 QDialog#trackSettingsDialog QLabel#settingsDialogSubtitle,
 QDialog#globalSettingsDialog QLabel#settingsDialogSubtitle,
+QDialog#shortcutsDialog QLabel#settingsDialogSubtitle,
 QDialog#exportSettingsDialog QLabel#settingsDialogSubtitle {
     font-size: 12px;
     color: #8a8a9e;
@@ -503,6 +506,7 @@ QDialog#exportSettingsDialog QLabel#settingsDialogSubtitle {
 
 QDialog#trackSettingsDialog QFrame#settingsCardTrackSelector,
 QDialog#globalSettingsDialog QFrame#settingsCard,
+QDialog#shortcutsDialog QFrame#settingsCard,
 QDialog#exportSettingsDialog QFrame#settingsCard {
     background: #161622;
     border: 1px solid #2a2a3c;
@@ -511,6 +515,7 @@ QDialog#exportSettingsDialog QFrame#settingsCard {
 
 QDialog#trackSettingsDialog QLabel[cssClass="settingsLabel"],
 QDialog#globalSettingsDialog QLabel[cssClass="settingsLabel"],
+QDialog#shortcutsDialog QLabel[cssClass="settingsLabel"],
 QDialog#exportSettingsDialog QLabel[cssClass="settingsLabel"] {
     color: #8a8a9e;
     font-size: 11px;
@@ -543,6 +548,7 @@ QDialog#globalSettingsDialog QPushButton[cssClass="settingsTabButton"]:checked {
 
 QDialog#trackSettingsDialog QGroupBox,
 QDialog#globalSettingsDialog QGroupBox,
+QDialog#shortcutsDialog QGroupBox,
 QDialog#exportSettingsDialog QGroupBox {
     background: #161622;
     border: 1px solid #2a2a3c;
@@ -555,6 +561,7 @@ QDialog#exportSettingsDialog QGroupBox {
 
 QDialog#trackSettingsDialog QGroupBox::title,
 QDialog#globalSettingsDialog QGroupBox::title,
+QDialog#shortcutsDialog QGroupBox::title,
 QDialog#exportSettingsDialog QGroupBox::title {
     subcontrol-origin: margin;
     left: 12px;
@@ -564,7 +571,8 @@ QDialog#exportSettingsDialog QGroupBox::title {
     background: #161622;
 }
 
-QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"] {
+QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"],
+QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"] {
     background: #0d0d12;
     color: #b5b5c6;
     border: 1px solid #2a2a3c;
@@ -574,12 +582,40 @@ QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"] {
     font-weight: 600;
 }
 
-QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:hover {
+QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:hover,
+QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"]:hover {
     background: #212130;
 }
 
-QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:pressed {
+QDialog#trackSettingsDialog QPushButton[cssClass="presetButton"]:pressed,
+QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"]:pressed {
     background: #2a2a3c;
+}
+
+QDialog#globalSettingsDialog QPushButton[cssClass="presetButton"][capturing="true"] {
+    background-color: #2d2757;
+    color: #a185ff;
+    border: 1px solid #926bff;
+}
+
+QDialog#globalSettingsDialog QPushButton[cssClass="shortcutClearButton"] {
+    background: #212130;
+    color: #8a8a9e;
+    border: none;
+    border-radius: 15px;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 0px;
+}
+
+QDialog#globalSettingsDialog QPushButton[cssClass="shortcutClearButton"]:hover {
+    background: #3b1818;
+    color: #f87171;
+}
+
+QDialog#globalSettingsDialog QPushButton[cssClass="shortcutClearButton"]:pressed {
+    background: #5c1e1e;
+    color: #ef4444;
 }
 
 QDialog#trackSettingsDialog QLabel[cssClass="fineLabel"],
@@ -707,4 +743,39 @@ QTabWidget#expertTabWidget QTabBar::tab:hover:!selected {
 
 QTabWidget#expertTabWidget QWidget {
     background: #161622;
+}
+
+/* Beautiful Minimalist Scrollbar (Dark Theme) */
+QDialog#globalSettingsDialog QScrollBar:vertical {
+    border: none;
+    background: transparent;
+    width: 6px;
+    margin: 0px;
+}
+
+QDialog#globalSettingsDialog QScrollBar::handle:vertical {
+    background: #374151;
+    min-height: 30px;
+    border-radius: 3px;
+}
+
+QDialog#globalSettingsDialog QScrollBar::handle:vertical:hover {
+    background: #4b5563;
+}
+
+QDialog#globalSettingsDialog QScrollBar::add-line:vertical,
+QDialog#globalSettingsDialog QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;
+}
+
+QDialog#globalSettingsDialog QScrollBar::up-arrow:vertical,
+QDialog#globalSettingsDialog QScrollBar::down-arrow:vertical {
+    background: none;
+}
+
+QDialog#globalSettingsDialog QScrollBar::add-page:vertical,
+QDialog#globalSettingsDialog QScrollBar::sub-page:vertical {
+    background: none;
 }

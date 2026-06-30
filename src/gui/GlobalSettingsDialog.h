@@ -12,6 +12,8 @@
 #include <QLineEdit>
 #include <QList>
 #include <QAudioDevice>
+#include <QMap>
+#include <QKeySequence>
 
 /**
  * @class GlobalSettingsDialog
@@ -21,19 +23,31 @@ class GlobalSettingsDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit GlobalSettingsDialog(QWidget *parent = nullptr);
+    explicit GlobalSettingsDialog(QWidget *parent = nullptr, int initialTab = 0);
     ~GlobalSettingsDialog() override = default;
+
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
 
 private slots:
     void onTabChanged(int index);
     void addPreferredOutput();
     void removePreferredOutput();
     void saveSettings();
+    void onShortcutButtonClicked(const QString &actionId);
+    void onClearShortcut(const QString &actionId);
+    void onResetShortcutsToDefaults();
 
 private:
     void setupUi();
     void loadSettings();
     void populateAudioDevices();
+    void startCapture(const QString &actionId);
+    void stopCapture(bool acceptInput, const QKeySequence &seq = QKeySequence());
+    bool checkConflict(const QKeySequence &seq, const QString &currentActionId);
+    QString getActionName(const QString &actionId) const;
+    void updateShortcutButtons();
 
     // Tab control
     QButtonGroup *m_tabGroup;
@@ -57,6 +71,16 @@ private:
     // Cached hardware devices
     QList<QAudioDevice> m_inputDevices;
     QList<QAudioDevice> m_outputDevices;
+
+    // Shortcuts Controls
+    QStringList m_videoActions;
+    QStringList m_recordActions;
+    QStringList m_audioActions;
+    QMap<QString, QPushButton*> m_shortcutButtons;
+    QMap<QString, QPushButton*> m_clearButtons;
+    QMap<QString, QKeySequence> m_tempShortcuts;
+    QString m_capturingActionId;
+    QPushButton *m_activeButton;
 };
 
 #endif // GLOBALSETTINGSDIALOG_H
