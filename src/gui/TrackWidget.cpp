@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGraphicsDropShadowEffect>
+#include <QStyle>
 
 TrackWidget::TrackWidget(int trackIndex, const QString& title, const QString& badgeColor, QWidget *parent)
     : QFrame(parent), m_trackIndex(trackIndex)
@@ -44,6 +45,14 @@ void TrackWidget::setupUi(const QString& title, const QString& badgeColor)
     headerLayout->addWidget(m_titleLabel);
     headerLayout->addStretch();
     headerLayout->addWidget(m_optionsButton);
+
+    m_recordArmButton = new QPushButton("R", this);
+    m_recordArmButton->setObjectName("recordArmButton");
+    m_recordArmButton->setCheckable(true);
+    m_recordArmButton->setChecked(true);
+    m_recordArmButton->setFixedSize(28, 28);
+    m_recordArmButton->setToolTip(tr("Armer/Désarmer l'enregistrement"));
+    headerLayout->addWidget(m_recordArmButton);
 
     QFrame *headerLine = new QFrame(this);
     headerLine->setFrameShape(QFrame::NoFrame);
@@ -95,6 +104,12 @@ void TrackWidget::setupUi(const QString& title, const QString& badgeColor)
     m_vuMeter = new AudioMeterWidget(this);
     mainLayout->addWidget(m_vuMeter);
 
+    m_recordingStateLabel = new QLabel("", this);
+    m_recordingStateLabel->setAlignment(Qt::AlignCenter);
+    m_recordingStateLabel->setObjectName("recordingStateLabel");
+    m_recordingStateLabel->setVisible(false);
+    mainLayout->addWidget(m_recordingStateLabel);
+
     // --- Color Badge ---
     QHBoxLayout *badgeLayout = new QHBoxLayout();
     badgeLayout->setContentsMargins(0, 5, 0, 0);
@@ -126,6 +141,8 @@ void TrackWidget::setupConnections()
                 // deviceIndex = index - 1 (to skip "Aucune entrée" at pos 0)
                 emit inputDeviceIndexChanged(index - 1);
             });
+
+    connect(m_recordArmButton, &QPushButton::toggled, this, &TrackWidget::recordArmChanged);
 }
 
 void TrackWidget::onVolumeSliderChanged(int value)
@@ -163,4 +180,23 @@ void TrackWidget::populateInputDevices(const QList<QAudioDevice> &devices)
         m_inputCombo->addItem(dev.description());
     }
     m_inputCombo->blockSignals(false);
+}
+
+void TrackWidget::setRecordingState(const QString &state)
+{
+    if (state == "recording") {
+        m_recordingStateLabel->setText("● REC");
+        m_recordingStateLabel->setProperty("state", "recording");
+        m_recordingStateLabel->style()->unpolish(m_recordingStateLabel);
+        m_recordingStateLabel->style()->polish(m_recordingStateLabel);
+        m_recordingStateLabel->setVisible(true);
+    } else if (state == "playing") {
+        m_recordingStateLabel->setText("▶ PLAYBACK");
+        m_recordingStateLabel->setProperty("state", "playing");
+        m_recordingStateLabel->style()->unpolish(m_recordingStateLabel);
+        m_recordingStateLabel->style()->polish(m_recordingStateLabel);
+        m_recordingStateLabel->setVisible(true);
+    } else {
+        m_recordingStateLabel->setVisible(false);
+    }
 }

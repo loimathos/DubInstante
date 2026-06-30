@@ -15,7 +15,7 @@ ExportDialog::ExportDialog(const QString &sourceVideo,
                           const QString &primaryAudio,
                           const QStringList &extraAudios,
                           qint64 lastRecordedDurationMs,
-                          qint64 recordingStartTimeMs,
+                          const QVector<qint64> &trackOffsetsMs,
                           float currentOriginalVolume,
                           const QVector<float> &currentTrackVolumes,
                           const QVector<bool> &currentTrackMutes,
@@ -25,7 +25,7 @@ ExportDialog::ExportDialog(const QString &sourceVideo,
     , m_primaryAudioPath(primaryAudio)
     , m_extraAudioPaths(extraAudios)
     , m_lastRecordedDurationMs(lastRecordedDurationMs)
-    , m_recordingStartTimeMs(recordingStartTimeMs)
+    , m_trackOffsetsMs(trackOffsetsMs)
     , m_defaultOriginalVolume(currentOriginalVolume)
     , m_defaultTrackVolumes(currentTrackVolumes)
     , m_defaultTrackMutes(currentTrackMutes)
@@ -829,15 +829,15 @@ ExportConfig ExportDialog::exportConfig() const
         config.trackVolumes.append(vol);
     }
 
-    QString range = m_rangeCombo->currentData().toString();
-    if (range == "last") {
-        config.startTimeMs = m_recordingStartTimeMs;
+    config.trackOffsetsMs = m_trackOffsetsMs;
+
+    // Time Range
+    if (m_rangeCombo->currentIndex() == 0) { // Section enregistrée
         config.durationMs = m_lastRecordedDurationMs;
     } else {
-        config.startTimeMs = 0;
         config.durationMs = -1;
     }
-
+    
     config.expertMode = m_advancedCheck->isChecked();
 
     if (config.expertMode) {

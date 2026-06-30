@@ -144,6 +144,7 @@ private:
     QAudioSource *m_audioSource;
     QIODevice *m_audioIODevice;
     bool m_isMonitoring;
+    QByteArray m_audioBuffer;
 };
 
 #endif // AUDIORECORDER_H

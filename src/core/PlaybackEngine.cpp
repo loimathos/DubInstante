@@ -86,6 +86,10 @@ QMediaPlayer::PlaybackState PlaybackEngine::playbackState() const {
 
 float PlaybackEngine::volume() const { return m_audioOutput->volume(); }
 
+QAudioDevice PlaybackEngine::audioDevice() const {
+    return m_audioOutput->device();
+}
+
 qreal PlaybackEngine::videoFrameRate() const {
   QVariant rate =
       m_mediaPlayer->metaData().value(QMediaMetaData::VideoFrameRate);

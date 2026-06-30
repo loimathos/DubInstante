@@ -35,6 +35,10 @@ bool SaveManager::save(const QString &filePath, const SaveData &data) {
     QJsonObject audioObj;
     audioObj["audio_input"] = audioTrack.audioInput;
     audioObj["audio_gain"] = audioTrack.audioGain;
+    audioObj["audioFilePath"] = audioTrack.audioFilePath;
+    audioObj["recordStartMs"] = audioTrack.recordStartMs;
+    audioObj["recordDurationMs"] = audioTrack.recordDurationMs;
+    audioObj["hasRecording"] = audioTrack.hasRecording;
     audioTracksArray.append(audioObj);
   }
   root["audio_tracks"] = audioTracksArray;
@@ -119,7 +123,7 @@ bool SaveManager::isZipAvailable(QString *errorMessage) {
 }
 
 bool SaveManager::saveWithMedia(const QString &zipPath, const SaveData &data,
-                                QString *errorMessage) {
+                                const QStringList &tempAudioPaths, QString *errorMessage) {
 
   // 1. Create temporary directory
   QTemporaryDir tempDir;
@@ -159,6 +163,33 @@ bool SaveManager::saveWithMedia(const QString &zipPath, const SaveData &data,
       *errorMessage =
           QObject::tr("Impossible de copier la vidéo dans l'archive.");
     return false;
+  }
+
+  // 3.5 Copy audio tracks
+  QString audioDirName = QFileInfo(zipPath).baseName() + "_audio";
+  QDir tempQDir(tempDir.path());
+  bool hasAnyAudio = false;
+  
+  for (int i = 0; i < data.audioTracks.size(); ++i) {
+      if (data.audioTracks[i].hasRecording && i < tempAudioPaths.size()) {
+          hasAnyAudio = true;
+          break;
+      }
+  }
+  
+  if (hasAnyAudio) {
+      tempQDir.mkdir(audioDirName);
+      QDir tempAudioDir(tempQDir.absoluteFilePath(audioDirName));
+      
+      for (int i = 0; i < data.audioTracks.size(); ++i) {
+          if (data.audioTracks[i].hasRecording && i < tempAudioPaths.size()) {
+              QString sourcePath = tempAudioPaths[i];
+              if (QFile::exists(sourcePath)) {
+                  QString destFilename = QString("track_%1.wav").arg(i + 1);
+                  QFile::copy(sourcePath, tempAudioDir.absoluteFilePath(destFilename));
+              }
+          }
+      }
   }
 
   // 4. Create ZIP archive
@@ -290,6 +321,10 @@ bool SaveManager::load(const QString &filePath, SaveData &data) {
     QJsonObject audioObj = val.toObject();
     audioData.audioInput = audioObj.value("audio_input").toString("");
     audioData.audioGain = (float)audioObj.value("audio_gain").toDouble(1.0);
+    audioData.audioFilePath = audioObj["audioFilePath"].toString();
+    audioData.recordStartMs = audioObj["recordStartMs"].toInteger();
+    audioData.recordDurationMs = audioObj["recordDurationMs"].toInteger();
+    audioData.hasRecording = audioObj["hasRecording"].toBool();
     data.audioTracks.append(audioData);
   }
 

@@ -31,7 +31,7 @@ struct ExportConfig {
     QStringList extraAudioPaths;    ///< Optional: paths to additional audio tracks
     QString outputPath;             ///< Absolute path for output file
     qint64 durationMs;              ///< Recording duration in milliseconds (-1 for full)
-    qint64 startTimeMs;             ///< Start time offset in milliseconds
+    QVector<qint64> trackOffsetsMs; ///< Start time offsets for each audio track
     float originalVolume;           ///< Volume of original video audio (0.0 to 1.0)
     QVector<float> trackVolumes;    ///< Volumes for primary and extra tracks (0.0 to 2.0)
     QString scaleResolution;        ///< Resolution scale: e.g., "1920:-2", "1280:-2", or empty
@@ -50,7 +50,6 @@ struct ExportConfig {
     
     ExportConfig()
         : durationMs(-1)
-        , startTimeMs(0)
         , originalVolume(1.0f)
         , speedPreset("medium")
         , crf(21)

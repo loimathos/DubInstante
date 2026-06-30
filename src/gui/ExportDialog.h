@@ -22,7 +22,7 @@ public:
                           const QString &primaryAudio,
                           const QStringList &extraAudios,
                           qint64 lastRecordedDurationMs,
-                          qint64 recordingStartTimeMs,
+                          const QVector<qint64> &trackOffsetsMs,
                           float currentOriginalVolume,
                           const QVector<float> &currentTrackVolumes,
                           const QVector<bool> &currentTrackMutes,
@@ -57,7 +57,7 @@ private:
     QString m_primaryAudioPath;
     QStringList m_extraAudioPaths;
     qint64 m_lastRecordedDurationMs;
-    qint64 m_recordingStartTimeMs;
+    QVector<qint64> m_trackOffsetsMs;
     
     float m_defaultOriginalVolume;
     QVector<float> m_defaultTrackVolumes;

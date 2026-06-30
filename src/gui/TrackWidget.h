@@ -22,6 +22,9 @@ public:
     
     QString currentInputDevice() const { return m_inputCombo->currentText(); }
     int currentVolume() const { return m_volumeSlider->value(); }
+    bool isArmed() const { return m_recordArmButton->isChecked(); }
+    void setArmed(bool armed) { m_recordArmButton->setChecked(armed); }
+    void setRecordingState(const QString &state);
     void setInputDevice(const QString& device);
     void setVolume(int volume);
 
@@ -30,6 +33,7 @@ signals:
     void inputSelected(const QString& inputName);
     void inputDeviceIndexChanged(int deviceIndex);
     void volumeChanged(int volume);
+    void recordArmChanged(bool armed);
 
 private slots:
     void onVolumeSliderChanged(int value);
@@ -45,6 +49,8 @@ private:
     QPushButton *m_optionsButton;
     QComboBox *m_inputCombo;
     QSlider *m_volumeSlider;
+    QPushButton *m_recordArmButton;
+    QLabel *m_recordingStateLabel;
     
     // Custom VU Meter
     class AudioMeterWidget *m_vuMeter;

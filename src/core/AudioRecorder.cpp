@@ -122,19 +122,35 @@ void AudioRecorder::processAudioBuffer()
         return;
     }
 
-    QByteArray data = m_audioIODevice->readAll();
-    if (data.isEmpty()) {
+    m_audioBuffer.append(m_audioIODevice->readAll());
+    if (m_audioBuffer.isEmpty()) {
         return;
     }
 
     // Determine sample format from the audio source
     QAudioFormat format = m_audioSource->format();
+    
+    int sampleSize = 2; // Default for Int16
+    if (format.sampleFormat() == QAudioFormat::Float) {
+        sampleSize = 4;
+    } else if (format.sampleFormat() != QAudioFormat::Int16) {
+        return; // Unsupported format
+    }
+    
+    // Only process complete samples
+    int bytesToProcess = (m_audioBuffer.size() / sampleSize) * sampleSize;
+    if (bytesToProcess == 0) {
+        return;
+    }
+    
+    QByteArray dataToProcess = m_audioBuffer.left(bytesToProcess);
+    m_audioBuffer.remove(0, bytesToProcess);
 
     float maxAmplitude = 0.0f;
 
     if (format.sampleFormat() == QAudioFormat::Int16) {
-        const qint16 *samples = reinterpret_cast<const qint16 *>(data.constData());
-        int sampleCount = data.size() / sizeof(qint16);
+        const qint16 *samples = reinterpret_cast<const qint16 *>(dataToProcess.constData());
+        int sampleCount = dataToProcess.size() / sizeof(qint16);
         
         for (int i = 0; i < sampleCount; ++i) {
             float absValue = qAbs(static_cast<float>(samples[i])) / 32768.0f;
@@ -143,8 +159,8 @@ void AudioRecorder::processAudioBuffer()
             }
         }
     } else if (format.sampleFormat() == QAudioFormat::Float) {
-        const float *samples = reinterpret_cast<const float *>(data.constData());
-        int sampleCount = data.size() / sizeof(float);
+        const float *samples = reinterpret_cast<const float *>(dataToProcess.constData());
+        int sampleCount = dataToProcess.size() / sizeof(float);
         
         for (int i = 0; i < sampleCount; ++i) {
             float absValue = qAbs(samples[i]);
@@ -152,8 +168,6 @@ void AudioRecorder::processAudioBuffer()
                 maxAmplitude = absValue;
             }
         }
-    } else {
-        return; // Unsupported format
     }
 
     // Clamp and emit

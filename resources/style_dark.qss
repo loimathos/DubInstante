@@ -860,4 +860,48 @@ QMessageBox QPushButton:pressed {
     background: #1d1d29;
 }
 
+/* Record Arm Button — Armed (checked) */
+QFrame[cssClass="track"] QPushButton#recordArmButton:checked {
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 11px;
+}
+
+/* Record Arm Button — Disarmed (unchecked) */
+QFrame[cssClass="track"] QPushButton#recordArmButton {
+    background: #1d1d29;
+    color: #8a8a9e;
+    border: 1px solid #3b3b52;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+QFrame[cssClass="track"] QPushButton#recordArmButton:hover {
+    background: #2a2a3c;
+}
+
+/* Recording State Labels */
+QLabel#recordingStateLabel[state="recording"] {
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 10px;
+}
+
+QLabel#recordingStateLabel[state="playing"] {
+    color: #22c55e;
+    font-weight: 700;
+    font-size: 10px;
+}
+
+/* Post-Record Notification Bar */
+QWidget#postRecordBar {
+    background: #2d2757;
+    border-bottom: 1px solid #3b3b52;
+}
+
+
 

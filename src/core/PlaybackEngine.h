@@ -89,6 +89,9 @@ public:
     
     /** @brief Returns the current volume level (0.0 to 1.0). */
     float volume() const;
+
+    /** @brief Returns the current audio output device. */
+    QAudioDevice audioDevice() const;
     
     /** @brief Returns the video frame rate in FPS. Defaults to 25.0 if unknown. */
     qreal videoFrameRate() const;

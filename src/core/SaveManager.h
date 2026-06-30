@@ -28,6 +28,10 @@ struct TrackSaveData {
 struct TrackAudioSaveData {
   QString audioInput;
   float audioGain = 1.0f;
+  QString audioFilePath;
+  qint64 recordStartMs = 0;
+  qint64 recordDurationMs = 0;
+  bool hasRecording = false;
 };
 
 /**
@@ -62,8 +66,8 @@ public:
    * @return True if successful.
    */
   bool save(const QString &filePath, const SaveData &data);
-  bool saveWithMedia(const QString &zipPath, const SaveData &data,
-                     QString *errorMessage = nullptr);
+  bool saveWithMedia(const QString &zipPath, const SaveData &data, 
+                     const QStringList &tempAudioPaths, QString *errorMessage = nullptr);
 
   /**
    * @brief Checks if the 'zip' utility is available (Unix only).

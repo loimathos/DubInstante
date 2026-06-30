@@ -173,17 +173,25 @@ QStringList ExportService::buildFFmpegArgs(const ExportConfig &config) const
     args << "-threads" << "0";
     
     // Input seeking (fast seek)
-    if (config.startTimeMs > 0) {
-        args << "-ss" << QString::number(config.startTimeMs / 1000.0, 'f', 3);
-    }
+    // NOTE: -ss is no longer used for start time because it trims the video.
+    // Instead, we use -itsoffset for audio sync below.
     
-    // Input files
+    // Video Input
     args << "-i" << config.videoPath;   // [0]
+    
+    // Primary Audio Input
+    if (config.trackOffsetsMs.size() > 0 && config.trackOffsetsMs[0] > 0) {
+        args << "-itsoffset" << QString::number(config.trackOffsetsMs[0] / 1000.0, 'f', 3);
+    }
     args << "-i" << config.audioPath;   // [1]
     
     // Add extra audio tracks: [2], [3], ...
-    for (const QString &extraPath : config.extraAudioPaths) {
+    for (int i = 0; i < config.extraAudioPaths.size(); ++i) {
+        const QString &extraPath = config.extraAudioPaths[i];
         if (!extraPath.isEmpty()) {
+            if (config.trackOffsetsMs.size() > i + 1 && config.trackOffsetsMs[i + 1] > 0) {
+                args << "-itsoffset" << QString::number(config.trackOffsetsMs[i + 1] / 1000.0, 'f', 3);
+            }
             args << "-i" << extraPath;
         }
     }

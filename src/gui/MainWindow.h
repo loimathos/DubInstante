@@ -12,6 +12,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QAudioDevice>
+#include <QAudioOutput>
 #include <QCheckBox>
 #include <QElapsedTimer>
 #include <QTimer>
@@ -114,6 +116,10 @@ private slots:
   void onCountdownTick();
   void startRecordingProcess();
 
+  // Preview playback sync
+  void handlePreviewSync(qint64 masterPosition);
+  void handlePreviewStateChange(QMediaPlayer::PlaybackState state);
+
 private:
   void setupUi();
   void createMenus();
@@ -124,6 +130,10 @@ private:
   void enterFullscreenRecording();
   void exitFullscreenRecording();
   void updateVolumeIcon(int value);
+  void releasePreviewSource(int trackIndex);
+  void refreshPreviewSources();
+  void showPostRecordBar();
+  void hidePostRecordBar();
 
   // Dynamic track management
   void setTrackCount(int count);
@@ -194,6 +204,9 @@ private:
   QAction *m_actionPersonalizeRythmo;
   QAction *m_actionExportRythmo;
 
+  // Post-record notification bar
+  QWidget *m_postRecordBar;
+
   // =========================================================================
   // State
   // =========================================================================
@@ -206,6 +219,16 @@ private:
   QElapsedTimer m_recordingTimer;
   qint64 m_lastRecordedDurationMs;
   qint64 m_recordingStartTimeMs;
+
+  // Per-track recording state
+  QVector<bool> m_hasRecording;
+  QVector<qint64> m_trackRecordStartMs;
+  QVector<qint64> m_trackRecordDurationMs;
+
+  // Preview playback
+  QVector<QMediaPlayer *> m_previewPlayers;
+  QVector<QAudioOutput *> m_previewOutputs;
+  QElapsedTimer m_lastSyncCorrection;
 
   // Advanced settings members
   QTimer *m_autoSaveTimer;
