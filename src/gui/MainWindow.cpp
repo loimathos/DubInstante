@@ -472,11 +472,12 @@ void MainWindow::setupUi() {
 }
 
 void MainWindow::createMenus() {
-  QMenuBar *menuBar = new QMenuBar(this);
-  setMenuBar(menuBar);
+  // Use QMainWindow's built-in menuBar() to ensure the native macOS menu bar
+  // is used. Creating a `new QMenuBar(this)` can bypass native integration.
+  QMenuBar *mb = menuBar();
 
   // === Files Menu ===
-  QMenu *filesMenu = menuBar->addMenu(tr("Files"));
+  QMenu *filesMenu = mb->addMenu(tr("Files"));
 
   m_actionOpenMp4 = new QAction(tr("Open MP4"), this);
   connect(m_actionOpenMp4, &QAction::triggered, this, &MainWindow::onOpenFile);
@@ -498,7 +499,7 @@ void MainWindow::createMenus() {
   filesMenu->addAction(m_actionManualExport);
 
   // === Application Menu ===
-  QMenu *appMenu = menuBar->addMenu(tr("Application"));
+  QMenu *appMenu = mb->addMenu(tr("Application"));
 
   m_actionExpertMode = new QAction(tr("Expert mode"), this);
   m_actionExpertMode->setCheckable(true);
@@ -513,44 +514,27 @@ void MainWindow::createMenus() {
   appMenu->addAction(m_actionGlobalSettings);
 
   // === Bande Rythmo Menu ===
-  QMenu *rythmoMenu = menuBar->addMenu(tr("Bande Rythmo"));
+  QMenu *rythmoMenu = mb->addMenu(tr("Bande Rythmo"));
 
-  // Track count selector: [ - ] N bande(s) rythmo [ + ]
-  QWidget *trackCountWidget = new QWidget(this);
-  QHBoxLayout *trackCountLayout = new QHBoxLayout(trackCountWidget);
-  trackCountLayout->setContentsMargins(8, 4, 8, 4);
-  trackCountLayout->setSpacing(6);
+  // Track count selector using plain QActions (QWidgetAction with embedded
+  // widgets doesn't work on macOS native menu bars).
+  m_trackCountLabel = new QLabel("1 bande rythmo");  // kept for programmatic updates
 
-  QPushButton *btnMinus = new QPushButton("−", trackCountWidget);
-  btnMinus->setFixedSize(28, 28);
-  btnMinus->setCursor(Qt::PointingHandCursor);
-  trackCountLayout->addWidget(btnMinus);
-
-  m_trackCountLabel = new QLabel("1 bande rythmo", trackCountWidget);
-  m_trackCountLabel->setAlignment(Qt::AlignCenter);
-  m_trackCountLabel->setMinimumWidth(120);
-  trackCountLayout->addWidget(m_trackCountLabel);
-
-  QPushButton *btnPlus = new QPushButton("+", trackCountWidget);
-  btnPlus->setFixedSize(28, 28);
-  btnPlus->setCursor(Qt::PointingHandCursor);
-  trackCountLayout->addWidget(btnPlus);
-
-  connect(btnMinus, &QPushButton::clicked, this, [this]() {
+  QAction *actionRemoveTrack = new QAction(tr("Retirer une bande (−)"), this);
+  connect(actionRemoveTrack, &QAction::triggered, this, [this]() {
     if (!m_isRecording) {
       setTrackCount(m_trackCount - 1);
     }
   });
+  rythmoMenu->addAction(actionRemoveTrack);
 
-  connect(btnPlus, &QPushButton::clicked, this, [this]() {
+  QAction *actionAddTrack = new QAction(tr("Ajouter une bande (+)"), this);
+  connect(actionAddTrack, &QAction::triggered, this, [this]() {
     if (!m_isRecording) {
       setTrackCount(m_trackCount + 1);
     }
   });
-
-  QWidgetAction *trackCountAction = new QWidgetAction(this);
-  trackCountAction->setDefaultWidget(trackCountWidget);
-  rythmoMenu->addAction(trackCountAction);
+  rythmoMenu->addAction(actionAddTrack);
 
   rythmoMenu->addSeparator();
 
@@ -562,7 +546,7 @@ void MainWindow::createMenus() {
   rythmoMenu->addAction(m_actionExportRythmo);
 
   // === Audio Menu ===
-  m_audioMenu = menuBar->addMenu(tr("Audio"));
+  m_audioMenu = mb->addMenu(tr("Audio"));
   updateAudioMenu();
 
 }

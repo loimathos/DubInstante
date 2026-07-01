@@ -36,36 +36,12 @@ QWidget#CentralWidget {
     background-color: #0d0d12;
 }
 
-/* Top menu */
-QMenuBar {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #0d0d12,
-                                stop:1 #161622);
-    border: none;
-    border-bottom: 1px solid #2a2a3c;
-    padding: 5px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #b5b5c6;
-}
-
-QMenuBar::item {
-    background: transparent;
-    color: #b5b5c6;
-    padding: 6px 11px;
-    margin: 0 2px;
-    border-radius: 8px;
-}
-
-QMenuBar::item:selected {
-    background: #212130;
-    color: #f3f3f6;
-}
-
-QMenuBar::item:pressed {
-    background: #2a2a3c;
-    color: #f3f3f6;
-}
+/*
+ * QMenuBar styling is intentionally omitted.
+ * On macOS, styling QMenuBar via QSS forces Qt to use a non-native
+ * widget-based menu bar, which causes the system menu bar to disappear.
+ * On Linux/Windows, the Fusion style + palette provides good defaults.
+ */
 
 
 QMenu {

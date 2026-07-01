@@ -13,7 +13,7 @@ on:
 jobs:
   test-macos:
     name: macOS Build & Launch Test
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
 
     - name: Checkout code
@@ -23,7 +23,7 @@ jobs:
       run: brew install ffmpeg pkg-config
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         version: '6.5.3'
         host: 'mac'
@@ -36,7 +36,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};/opt/homebrew"
 
     - name: Build
       run: |
@@ -58,7 +58,7 @@ jobs:
     # ── Package ────────────────────────────────────────────
     - name: Run macdeployqt
       run: |
-        macdeployqt "${{ steps.locate.outputs.app_path }}" -verbose=1
+        "${{ env.Qt6_DIR }}/bin/macdeployqt" "${{ steps.locate.outputs.app_path }}" -verbose=1
 
     - name: Ad-hoc code sign
       run: |

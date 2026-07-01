@@ -20,7 +20,7 @@ jobs:
         sudo apt install -y build-essential cmake wget libfuse2 libgl1-mesa-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libasound2-dev libpulse-dev libxcb-cursor0
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         version: '6.5.3'
         host: 'linux'
@@ -52,16 +52,13 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         version: '6.5.3'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
         modules: 'qtmultimedia'
-
-    - name: Set up MSVC
-      uses: ilammy/msvc-dev-cmd@v1
 
     - name: Download FFmpeg
       run: |
@@ -74,7 +71,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. "Visual Studio 17 2022" x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};C:/ffmpeg/ffmpeg-bin"
+        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};C:/ffmpeg/ffmpeg-bin"
 
     - name: Build
       shell: cmd
@@ -105,7 +102,7 @@ jobs:
 
   build-macos:
     name: macOS Build
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -114,7 +111,7 @@ jobs:
       run: brew install ffmpeg pkg-config
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         version: '6.5.3'
         host: 'mac'
