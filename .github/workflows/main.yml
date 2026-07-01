@@ -70,22 +70,25 @@ jobs:
         Rename-Item -Path "C:\ffmpeg\ffmpeg-master-latest-win64-gpl-shared" -NewName "ffmpeg-bin"
 
     - name: Configure CMake
+      shell: cmd
       run: |
         mkdir build
         cd build
-        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.5.3/msvc2019_64;C:/ffmpeg/ffmpeg-bin"
+        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};C:/ffmpeg/ffmpeg-bin"
 
     - name: Build
+      shell: cmd
       run: |
         cd build
         cmake --build . --config Release
 
     - name: Package with windeployqt
+      shell: cmd
       run: |
         mkdir dist
         copy build\Release\DubInstante.exe dist\
         copy C:\ffmpeg\ffmpeg-bin\bin\*.dll dist\
-        windeployqt --release --no-translations --compiler-runtime --multimedia dist\DubInstante.exe
+        "${{ env.Qt6_DIR }}\bin\windeployqt.exe" --release --no-translations --compiler-runtime --multimedia dist\DubInstante.exe
 
     - name: Get Version
       id: get_version
@@ -123,7 +126,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_BUNDLE=ON
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_BUNDLE=ON -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};/opt/homebrew"
 
     - name: Build
       run: |
@@ -138,7 +141,7 @@ jobs:
           echo "Error: Could not find DubInstante.app"
           exit 1
         fi
-        macdeployqt "$APP_PATH" -verbose=1
+        "${{ env.Qt6_DIR }}/bin/macdeployqt" "$APP_PATH" -verbose=1
 
     - name: Ad-hoc code sign
       run: |
@@ -149,7 +152,6 @@ jobs:
     - name: Create DMG
       run: |
         APP_PATH=$(find build -name "DubInstante.app" -type d | head -n 1)
-        APP_DIR=$(dirname "$APP_PATH")
         hdiutil create -volname "DubInstante" -srcfolder "$APP_PATH" -ov -format UDZO "build/DubInstante.dmg"
 
     - name: Get Version
@@ -164,62 +166,3 @@ jobs:
       with:
         name: DubInstante_macos_${{ steps.get_version.outputs.version }}
         path: build/DubInstante.dmg
-
-  # build-android:
-  #   name: Android Build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4fi
-
-  #   - name: Set up JDK 17
-  #     uses: actions/setup-java@v3
-  #     with:
-  #       java-version: '17'
-  #       distribution: 'temurin'
-
-  #   - name: Setup Android SDK
-  #     uses: android-actions/setup-android@v3
-
-  #   - name: Install Qt (Host tools for cross-compilation)
-  #     uses: jurplel/install-qt-action@v3
-  #     with:
-  #       version: '6.5.3'
-  #       host: 'linux'
-  #       target: 'desktop'
-  #       set-env: false
-
-  #   - name: Install Qt (Android arm64)
-  #     uses: jurplel/install-qt-action@v3
-  #     with:
-  #       version: '6.5.3'
-  #       host: 'linux'
-  #       target: 'android'
-  #       arch: 'android_arm64_v8a'
-  #       modules: 'qtmultimedia'
-
-  #   - name: Configure CMake
-  #     run: |
-  #       cd src/phonegui
-  #       mkdir build-android
-  #       cd build-android
-  #       $Qt6_DIR/bin/qt-cmake .. \
-  #         -DCMAKE_BUILD_TYPE=Debug \
-  #         -DQT_HOST_PATH="$(dirname "$Qt6_DIR")/gcc_64"
-
-  #   - name: Build APK
-  #     run: |
-  #       cd src/phonegui/build-android
-  #       cmake --build . --target apk
-
-  #   - name: Get Version
-  #     id: get_version
-  #     run: |
-  #       VERSION=$(grep -m 1 "## \[" CHANGELOG.md | sed -n 's/.*\[\([0-9.]*\)\].*/\1/p')
-  #       echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-  #   - name: Upload Artifact
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: DubInstante_Android_${{ steps.get_version.outputs.version }}
-  #       path: src/phonegui/build-android/android-build/build/outputs/apk/**/*.apk
