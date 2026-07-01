@@ -74,7 +74,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};C:/ffmpeg/ffmpeg-bin"
+        cmake .. "Visual Studio 17 2022" x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};C:/ffmpeg/ffmpeg-bin"
 
     - name: Build
       shell: cmd
