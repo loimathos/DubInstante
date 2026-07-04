@@ -46,7 +46,7 @@ jobs:
 
   build-windows:
     name: Windows Build
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -85,7 +85,7 @@ jobs:
         mkdir dist
         copy build\Release\DubInstante.exe dist\
         copy C:\ffmpeg\ffmpeg-bin\bin\*.dll dist\
-        "${{ env.Qt6_DIR }}\bin\windeployqt.exe" --release --no-translations --compiler-runtime --multimedia dist\DubInstante.exe
+        windeployqt.exe --release --no-translations --compiler-runtime --multimedia dist\DubInstante.exe
 
     - name: Get Version
       id: get_version
@@ -138,7 +138,7 @@ jobs:
           echo "Error: Could not find DubInstante.app"
           exit 1
         fi
-        "${{ env.Qt6_DIR }}/bin/macdeployqt" "$APP_PATH" -verbose=1
+        macdeployqt "$APP_PATH" -verbose=1
 
     - name: Ad-hoc code sign
       run: |
