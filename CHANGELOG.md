@@ -5,6 +5,14 @@ All notable changes to **DubInstante** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2026-07-13
+
+### Fixed
+- **Arch Linux Crash (#7)**: Fixed the segmentation fault with `GStreamer-CRITICAL` errors on Arch-based distros (Arch, EndeavourOS, Manjaro) by splitting the Linux release into two AppImages. The new `DubInstante_arch_<version>.AppImage` is built on Arch Linux against current system libraries and uses the Qt Multimedia FFmpeg backend (no GStreamer bundled).
+
+### Changed
+- **Linux Artifact Rename**: The Ubuntu-built AppImage is now named `DubInstante_debian_<version>.AppImage` (previously `DubInstante_linux_<version>.AppImage`). Update any scripts downloading by the old name.
+
 ## [0.11.0] - 2026-03-31
 
 ### Fixed
