@@ -52,6 +52,7 @@ jobs:
     env:
       APPIMAGE_EXTRACT_AND_RUN: '1'
       ARCH: x86_64
+      NO_STRIP: '1'
     steps:
     - name: Install dependencies
       run: |
